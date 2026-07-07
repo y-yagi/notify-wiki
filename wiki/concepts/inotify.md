@@ -160,7 +160,16 @@ Read-only flags (only ever appear in the returned mask, never settable):
 - `[[fanotify]]` — sibling API with mount/filesystem-wide watching and access-
   permission interception; lacked create/delete/move events until Linux 5.1,
   before which inotify was the only option for those.
-- `[[kqueue]]` — BSD/macOS equivalent; not yet written up.
+- `[[kqueue]]` — BSD/macOS equivalent, via the `EVFILT_VNODE` filter; a
+  general kernel event queue rather than a file-notification-specific API,
+  and requires an open fd per watched file rather than inotify's
+  watch-descriptor model.
+- `[[findfirstchangenotification]]` — Windows' oldest equivalent; unlike
+  inotify's structured event records, it only signals that *some* change
+  matching a filter occurred, with no event type or filename detail.
+- `[[readdirectorychangesw]]` — Windows' closer analogue to inotify's event
+  model: both deliver structured records (filename + change type) over a
+  buffer/fd the app reads, with similar full-rescan-on-overflow requirements.
 
 ## Sources
 
