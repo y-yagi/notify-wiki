@@ -5,7 +5,9 @@ See `/CLAUDE.md` for how this wiki is organized and maintained.
 
 ## Concepts
 
-_No pages yet — this section fills in as sources are ingested._
+- [dnotify](concepts/dnotify.md)
+- [fanotify](concepts/fanotify.md)
+- [inotify](concepts/inotify.md)
 
 Expected coverage: `inotify`, `fanotify`, `dnotify`, `kqueue`/`kevent`,
 `FSEvents`, `ReadDirectoryChangesW`, and userspace libraries built on top
@@ -17,7 +19,9 @@ _No pages yet._
 
 ## Sources
 
-_No sources ingested yet. Drop primary material into `raw/` to start._
+- [kernel-dnotify](sources/kernel-dnotify.md) — dnotify.txt (kernel.org)
+- [man7-fanotify-7](sources/man7-fanotify-7.md) — fanotify(7) man page (man7.org)
+- [man7-inotify-7](sources/man7-inotify-7.md) — inotify(7) man page (man7.org)
 
 ## Log
 
