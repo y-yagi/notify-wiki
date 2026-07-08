@@ -2,7 +2,7 @@
 title: FSEvents
 tags: [macos, darwin, event-driven]
 updated: 2026-07-08
-sources: ["../sources/apple-fsevents-progguide.md"]
+sources: ["../sources/apple-fsevents-progguide.md", "../sources/watchman-cookies.md"]
 ---
 
 # FSEvents
@@ -107,6 +107,14 @@ event ID N (possibly days ago, possibly before I was even running)?"
   building its initial snapshot, and treat any directory that changes during
   the initial scan as needing a full rescan rather than trusting a
   timestamp comparison.
+- **`FSEventStreamFlushSync` is not actually a hard guarantee under load.**
+  [[watchman]] (a real production consumer) reports that during a large
+  `git checkout`, FSEvents-reported changes have arrived *after* both a
+  cookie-file notification and a `FSEventStreamFlushSync` call had already
+  returned — i.e. the API's own documented flush primitive can lie about
+  having flushed everything. Apple's suggested replacement is to build a
+  watcher on Endpoint Security instead; there is no documented fix within
+  the FSEvents API itself.
 
 ## Platform notes
 
@@ -138,7 +146,11 @@ event ID N (possibly days ago, possibly before I was even running)?"
   it has no cross-reboot persistence, but its `FILE_NOTIFY_INFORMATION`
   records give more per-change detail than FSEvents' directory-path-only
   callback.
+- `[[watchman]]` — a real-world consumer whose query-synchronization design
+  documents FSEvents' synchronous-flush limitation from production
+  experience, not just the API reference.
 
 ## Sources
 
 - [apple-fsevents-progguide](../sources/apple-fsevents-progguide.md)
+- [watchman-cookies](../sources/watchman-cookies.md)

@@ -1,0 +1,495 @@
+libuv fs_event API documentation
+https://docs.libuv.org/en/v1.x/fs_event.html
+
+Contents
+Menu
+Expand
+Light mode
+Dark mode
+Auto light/dark, in light mode
+Auto light/dark, in dark mode
+Hide navigation sidebar
+Hide table of contents sidebar
+Skip to content
+Toggle site navigation sidebar
+libuv documentation
+Toggle Light / Dark / Auto color theme
+Toggle table of contents sidebar
+libuv documentation
+Design overview
+API documentation
+Toggle navigation of API documentation
+Error handling
+Version-checking macros and functions
+uv_loop_t
+— Event loop
+uv_handle_t
+— Base handle
+uv_req_t
+— Base request
+uv_timer_t
+— Timer handle
+uv_prepare_t
+— Prepare handle
+uv_check_t
+— Check handle
+uv_idle_t
+— Idle handle
+uv_async_t
+— Async handle
+uv_poll_t
+— Poll handle
+uv_signal_t
+— Signal handle
+uv_process_t
+— Process handle
+uv_stream_t
+— Stream handle
+uv_tcp_t
+— TCP handle
+uv_pipe_t
+— Pipe handle
+uv_tty_t
+— TTY handle
+uv_udp_t
+— UDP handle
+uv_fs_event_t
+— FS Event handle
+uv_fs_poll_t
+— FS Poll handle
+File system operations
+Thread pool work scheduling
+DNS utility functions
+Shared library handling
+Threading and synchronization utilities
+Miscellaneous utilities
+Metrics operations
+User guide
+Toggle navigation of User guide
+Introduction
+Basics of libuv
+Filesystem
+Networking
+Threads
+Processes
+Advanced event loops
+Utilities
+About
+Upgrading
+Toggle navigation of Upgrading
+libuv 0.10 -> 1.0.0 migration guide
+Back to top
+View this page
+Toggle Light / Dark / Auto color theme
+Toggle table of contents sidebar
+uv_fs_event_t
+— FS Event handle
+¶
+FS Event handles allow the user to monitor a given path for changes, for example,
+if the file was renamed or there was a generic change in it. This handle uses
+the best backend for the job on each platform.
+Note
+For AIX, the non default IBM bos.ahafs package has to be installed.
+The AIX Event Infrastructure file system (ahafs) has some limitations:
+ahafs tracks monitoring per process and is not thread safe. A separate process
+must be spawned for each monitor for the same event.
+Events for file modification (writing to a file) are not received if only the
+containing folder is watched.
+See
+documentation
+for more details.
+The z/OS file system events monitoring infrastructure does not notify of file
+creation/deletion within a directory that is being monitored.
+See the
+IBM Knowledge centre
+for more details.
+Data types
+¶
+type
+uv_fs_event_t
+¶
+FS Event handle type.
+typedef
+void
+(
+*
+uv_fs_event_cb
+)
+(
+uv_fs_event_t
+*
+handle
+,
+const
+char
+*
+filename
+,
+int
+events
+,
+int
+status
+)
+¶
+Callback passed to
+uv_fs_event_start()
+which will be called repeatedly
+after the handle is started.
+If the handle was started with a directory the
+filename
+parameter will
+be a relative path to a file contained in the directory, or
+NULL
+if the
+file name cannot be determined.
+The
+events
+parameter is an ORed mask of
+uv_fs_event
+elements.
+Note
+For FreeBSD path could sometimes be
+NULL
+due to a kernel bug.
+enum
+uv_fs_event
+¶
+Event types that
+uv_fs_event_t
+handles monitor.
+enum
+uv_fs_event
+{
+UV_RENAME
+=
+1
+,
+UV_CHANGE
+=
+2
+};
+enum
+uv_fs_event_flags
+¶
+Flags that can be passed to
+uv_fs_event_start()
+to control its
+behavior.
+enum
+uv_fs_event_flags
+{
+/*
+*
+By
+default
+,
+if
+the
+fs
+event
+watcher
+is
+given
+a
+directory
+name
+,
+we
+will
+*
+watch
+for
+all
+events
+in
+that
+directory
+.
+This
+flags
+overrides
+this
+behavior
+*
+and
+makes
+fs_event
+report
+only
+changes
+to
+the
+directory
+entry
+itself
+.
+This
+*
+flag
+does
+not
+affect
+individual
+files
+watched
+.
+*
+This
+flag
+is
+currently
+not
+implemented
+yet
+on
+any
+backend
+.
+*/
+UV_FS_EVENT_WATCH_ENTRY
+=
+1
+,
+/*
+*
+By
+default
+uv_fs_event
+will
+try
+to
+use
+a
+kernel
+interface
+such
+as
+inotify
+*
+or
+kqueue
+to
+detect
+events
+.
+This
+may
+not
+work
+on
+remote
+file
+systems
+such
+*
+as
+NFS
+mounts
+.
+This
+flag
+makes
+fs_event
+fall
+back
+to
+calling
+stat
+()
+on
+a
+*
+regular
+interval
+.
+*
+This
+flag
+is
+currently
+not
+implemented
+yet
+on
+any
+backend
+.
+*/
+UV_FS_EVENT_STAT
+=
+2
+,
+/*
+*
+By
+default
+,
+event
+watcher
+,
+when
+watching
+directory
+,
+is
+not
+registering
+*
+(
+is
+ignoring
+)
+changes
+in
+its
+subdirectories
+.
+*
+This
+flag
+will
+override
+this
+behaviour
+on
+platforms
+that
+support
+it
+.
+*/
+UV_FS_EVENT_RECURSIVE
+=
+4
+};
+Public members
+¶
+N/A
+See also
+The
+uv_handle_t
+members also apply.
+API
+¶
+int
+uv_fs_event_init
+(
+uv_loop_t
+*
+loop
+,
+uv_fs_event_t
+*
+handle
+)
+¶
+Initialize the handle.
+int
+uv_fs_event_start
+(
+uv_fs_event_t
+*
+handle
+,
+uv_fs_event_cb
+cb
+,
+const
+char
+*
+path
+,
+unsigned
+int
+flags
+)
+¶
+Start the handle with the given callback, which will watch the specified
+path
+for changes.
+flags
+can be an ORed mask of
+uv_fs_event_flags
+.
+Note
+Currently the only supported flag is
+UV_FS_EVENT_RECURSIVE
+and
+only on OSX and Windows.
+Note
+On macOS, events collected by the OS immediately before calling
+uv_fs_event_start
+might be reported to the
+uv_fs_event_cb
+callback.
+int
+uv_fs_event_stop
+(
+uv_fs_event_t
+*
+handle
+)
+¶
+Stop the handle, the callback will no longer be called.
+int
+uv_fs_event_getpath
+(
+uv_fs_event_t
+*
+handle
+,
+char
+*
+buffer
+,
+size_t
+*
+size
+)
+¶
+Get the path being monitored by the handle. The buffer must be preallocated
+by the user. Returns 0 on success or an error code < 0 in case of failure.
+On success,
+buffer
+will contain the path and
+size
+its length. If the buffer
+is not big enough
+UV_ENOBUFS
+will be returned and
+size
+will be set to
+the required size, including the null terminator.
+Changed in version 1.3.0:
+the returned length no longer includes the terminating null byte,
+and the buffer is not null terminated.
+Changed in version 1.9.0:
+the returned length includes the terminating null
+byte on
+UV_ENOBUFS
+, and the buffer is null terminated
+on success.
+See also
+The
+uv_handle_t
+API functions also apply.
+Next
+uv_fs_poll_t
+— FS Poll handle
+Previous
+uv_udp_t
+— UDP handle
+Copyright © 2014-present, libuv contributors
+Made with
+Sphinx
+and
+@pradyunsg
+'s
+Furo
+On this page
+uv_fs_event_t
+— FS Event handle
+Data types
+Public members
+API

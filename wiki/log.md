@@ -1,6 +1,22 @@
 # Change log
 
 ## 2026-07-08
+- Ingested userspace-library sources: `raw/libuv-fs-event.txt`,
+  `raw/watchman-cookies.md`, `raw/watchman-readme.md`,
+  `raw/chokidar-readme.md`, `raw/notify-rs-readme.md`,
+  `raw/fsnotify-go-readme.md`. Added matching `wiki/sources/*.md` pages and 5
+  new concept pages: `concepts/libuv.md`, `concepts/watchman.md`,
+  `concepts/chokidar.md`, `concepts/notify-rs.md`, `concepts/fsnotify-go.md`
+  (named `fsnotify-go` rather than `fsnotify` to avoid collision with the
+  Linux kernel backend page). Cross-linked each to the OS-level concept
+  page(s) it wraps. Notable finds: Watchman's cookie-synchronization design
+  doc documents a real production case where macOS FSEvents delivered
+  events *after* `FSEventStreamFlushSync` returned — added as a new
+  Limitations bullet + source on `concepts/fsevents.md`. Go's `fsnotify` is
+  the only library here with a working illumos/Solaris FEN backend, which
+  has no dedicated concept page yet (linked as `[[fen]]` from
+  `watchman.md`/`fsnotify-go.md` as a forward reference, not yet broken —
+  flagging as the next known gap). Updated `wiki/index.md`.
 - Ingested `raw/lwn-fsnotify-unified-backend.txt` (Eric Paris's original fsnotify
   patch mail, Feb 2009, archived on LWN) and `raw/lwn-fanotify-api.txt` ("The
   fanotify API" by Jonathan Corbet, LWN, July 2009). Added

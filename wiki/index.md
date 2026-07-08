@@ -5,19 +5,27 @@ See `/CLAUDE.md` for how this wiki is organized and maintained.
 
 ## Concepts
 
+- [chokidar](concepts/chokidar.md)
 - [dnotify](concepts/dnotify.md)
 - [fanotify](concepts/fanotify.md)
 - [findfirstchangenotification](concepts/findfirstchangenotification.md)
 - [fsevents](concepts/fsevents.md)
 - [fsnotify](concepts/fsnotify.md)
+- [fsnotify-go](concepts/fsnotify-go.md)
 - [inotify](concepts/inotify.md)
 - [kqueue](concepts/kqueue.md)
+- [libuv](concepts/libuv.md)
+- [notify-rs](concepts/notify-rs.md)
 - [readdirectorychangesw](concepts/readdirectorychangesw.md)
 - [usn-journal](concepts/usn-journal.md)
+- [watchman](concepts/watchman.md)
 
 Expected coverage: `inotify`, `fanotify`, `dnotify`, `kqueue`/`kevent`,
-`FSEvents`, `ReadDirectoryChangesW`, and userspace libraries built on top
-(`libuv`, `watchman`, `chokidar`, `notify-rs`, `fsnotify`).
+`FSEvents`, `ReadDirectoryChangesW` — all present. Userspace libraries built
+on top of these (`libuv`, `watchman`, `chokidar`, `notify-rs`, Go's
+`fsnotify`) are now covered too. Remaining known gap: Solaris/illumos FEN
+(`port_create`/`port_get`), referenced from `fsnotify-go.md` and
+`watchman.md` but with no dedicated concept page yet.
 
 ## Comparisons
 
@@ -35,6 +43,12 @@ _No pages yet._
 - [openbsd-kqueue-2](sources/openbsd-kqueue-2.md) — kqueue(2) man page (man.openbsd.org)
 - [lwn-fsnotify-unified-backend](sources/lwn-fsnotify-unified-backend.md) — fsnotify unified backend patch mail (LWN.net archive)
 - [lwn-fanotify-api](sources/lwn-fanotify-api.md) — "The fanotify API" (LWN.net)
+- [libuv-fs-event](sources/libuv-fs-event.md) — libuv `uv_fs_event_t` API docs
+- [watchman-cookies](sources/watchman-cookies.md) — Watchman "Query Synchronization" design doc
+- [watchman-readme](sources/watchman-readme.md) — Watchman README.markdown
+- [chokidar-readme](sources/chokidar-readme.md) — Chokidar README
+- [notify-rs-readme](sources/notify-rs-readme.md) — notify-rs README
+- [fsnotify-go-readme](sources/fsnotify-go-readme.md) — fsnotify (Go) README
 
 ## Log
 
