@@ -1,6 +1,31 @@
 # Change log
 
 ## 2026-07-09
+- Ingested `raw/apple-dev-fseventstreamcreateflagfileevents.txt` (Apple
+  Developer Docs live page content for `kFSEventStreamCreateFlagFileEvents`
+  — availability badges + Discussion text, pasted by the user since the page
+  is a JS-rendered SPA). Added
+  `wiki/sources/apple-dev-fseventstreamcreateflagfileevents.md`. Resolved the
+  "unconfirmed OS version" caveat left on `apple-fsevents-h.md` and
+  `concepts/fsevents.md`'s Platform notes: confirmed `FileEvents` is
+  available since macOS 10.7+ and Mac Catalyst 13.1+. Discussion text matched
+  the header's doc comment verbatim, cross-confirming the earlier header
+  mirror's accuracy rather than adding new descriptive content.
+- Ingested `raw/apple-fsevents-h.txt` (Apple's `CarbonCore/FSEvents.h` header,
+  MacOSX10.9 SDK, mirrored verbatim via the `phracker/MacOSX-SDKs` GitHub
+  repo — used in place of the JS-rendered live Apple docs page). Added
+  `wiki/sources/apple-fsevents-h.md`. Updated `concepts/fsevents.md`: replaced
+  the blanket "Not for single-file monitoring" limitation with a corrected
+  one — `kFSEventStreamCreateFlagFileEvents` (opt-in) does provide per-file
+  granularity (`ItemCreated`/`ItemRemoved`/`ItemRenamed`/`ItemModified`/etc.
+  plus `ItemIsFile`/`ItemIsDir`/`ItemIsSymlink`), at the cost of significantly
+  more events; noted this doesn't change FSEvents' underlying daemon+DB
+  architecture, and that whether Apple still recommends kqueue for
+  single-file watching post-FileEvents isn't confirmed by any source here.
+  Also updated Platform notes with the flag's documented behavior, replacing
+  the earlier "not covered here" gap. Flagged that the header itself doesn't
+  carry an explicit OS-version-gating macro for this flag — the "OS X 10.7"
+  attribution rests on outside knowledge, not this raw source.
 - Ingested `raw/wikipedia-robert-love.txt` (Wikipedia's "Robert Love" article,
   fetched/summarized 2026-07-09 — not verbatim wikitext, flagged as
   lower-confidence than the wiki's other `raw/` sources). Added

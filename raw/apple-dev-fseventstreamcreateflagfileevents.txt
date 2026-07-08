@@ -1,0 +1,23 @@
+Source: Apple Developer Documentation
+URL: https://developer.apple.com/documentation/coreservices/1455376-fseventstreamcreateflags/kfseventstreamcreateflagfileevents
+Symbol: kFSEventStreamCreateFlagFileEvents
+Fetched/transcribed: 2026-07-09 (pasted by user; live page is a JS-rendered
+SPA not capturable via automated fetch, per apple-fsevents-progguide.md and
+apple-fsevents-h.md notes)
+
+---
+
+kFSEventStreamCreateFlagFileEvents
+
+Availability:
+Mac Catalyst 13.1+
+macOS 10.7+
+
+kFSEventStreamCreateFlagFileEvents = 0x00000010
+
+Discussion
+
+Request file-level notifications. Your stream will receive events about
+individual files in the hierarchy you're watching instead of only receiving
+directory level notifications. Use this flag with care as it will generate
+significantly more events than without it.

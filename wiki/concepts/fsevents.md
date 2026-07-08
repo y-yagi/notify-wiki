@@ -1,8 +1,8 @@
 ---
 title: FSEvents
 tags: [macos, darwin, event-driven]
-updated: 2026-07-08
-sources: ["../sources/apple-fsevents-progguide.md", "../sources/watchman-cookies.md"]
+updated: 2026-07-09
+sources: ["../sources/apple-fsevents-progguide.md", "../sources/watchman-cookies.md", "../sources/apple-fsevents-h.md", "../sources/apple-dev-fseventstreamcreateflagfileevents.md"]
 ---
 
 # FSEvents
@@ -81,10 +81,18 @@ event ID N (possibly days ago, possibly before I was even running)?"
   preempt an access (Apple explicitly recommends a VFS-level kernel
   extension for that — FSEvents has no permission/interception model at all,
   unlike [[fanotify]]).
-- **Not for single-file monitoring** — Apple's own guidance is to use
-  [[kqueue]]'s `EVFILT_VNODE` instead if you only care about one file;
-  FSEvents' overhead (daemon round-trip, persistent DB writes) isn't
-  justified at that granularity.
+- **Directory-level granularity is only the default, not a hard limit** —
+  the `kFSEventStreamCreateFlagFileEvents` flag (present since at least the
+  MacOSX10.9 SDK header) switches a stream to per-file notifications:
+  `kFSEventStreamEventFlagItemCreated`/`ItemRemoved`/`ItemRenamed`/
+  `ItemModified`/etc., plus `ItemIsFile`/`ItemIsDir`/`ItemIsSymlink` to
+  identify the kind of item that changed. It's opt-in and the header warns
+  it "will generate significantly more events than without it." This doesn't
+  change the underlying architecture (still daemon round-trip + persistent
+  DB writes per stream) — Apple's older guidance to use [[kqueue]]'s
+  `EVFILT_VNODE` for lightweight single-file watching is not contradicted by
+  this flag, but whether Apple still makes that specific recommendation
+  post-`FileEvents` isn't confirmed by any source in this wiki.
 - Coalescing across a directory and its subdirectories can force a full
   recursive rescan (`MustScanSubDirs`) — the notification doesn't tell you
   how deep the actual change was.
@@ -123,10 +131,12 @@ event ID N (possibly days ago, possibly before I was even running)?"
   per-volume database) unchanged in spirit since introduction, per this 2012
   edition of the guide; the live current Apple reference page
   (`developer.apple.com/documentation/coreservices/file_system_events`) is a
-  JS-rendered SPA and wasn't captured verbatim for this wiki — treat this
-  archived 2012 guide as historically accurate for the fundamentals but not
-  authoritative for anything added afterward (e.g. `FSEventStreamCreateFlagFileEvents`-style
-  per-file granularity added in later OS X releases is not covered here).
+  JS-rendered SPA and wasn't captured verbatim for this wiki.
+- `kFSEventStreamCreateFlagFileEvents` (per-file granularity, opt-in) was
+  added after the 2012 guide's coverage. Confirmed available since **macOS
+  10.7** and, later, **Mac Catalyst 13.1+**, per Apple's live reference page.
+  See [apple-fsevents-h](../sources/apple-fsevents-h.md) and
+  [apple-dev-fseventstreamcreateflagfileevents](../sources/apple-dev-fseventstreamcreateflagfileevents.md).
 
 ## Related concepts
 
@@ -155,3 +165,5 @@ event ID N (possibly days ago, possibly before I was even running)?"
 
 - [apple-fsevents-progguide](../sources/apple-fsevents-progguide.md)
 - [watchman-cookies](../sources/watchman-cookies.md)
+- [apple-fsevents-h](../sources/apple-fsevents-h.md)
+- [apple-dev-fseventstreamcreateflagfileevents](../sources/apple-dev-fseventstreamcreateflagfileevents.md)
