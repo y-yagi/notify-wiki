@@ -149,6 +149,7 @@ event ID N (possibly days ago, possibly before I was even running)?"
 - `[[watchman]]` — a real-world consumer whose query-synchronization design
   documents FSEvents' synchronous-flush limitation from production
   experience, not just the API reference.
+- [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
 
 ## Sources
 

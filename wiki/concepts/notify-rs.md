@@ -52,6 +52,7 @@ picks one native mechanism per OS with no user-facing choice).
   into the core watcher rather than splitting it into separate crates.
 - [[fsnotify-go]] — cited inspiration; Go equivalent, notably still lacking
   a fanotify or polling backend that notify-rs already has.
+- [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
 
 ## Sources
 

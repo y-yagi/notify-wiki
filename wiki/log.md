@@ -1,6 +1,27 @@
 # Change log
 
 ## 2026-07-08
+- Ran a `/lint` health check across `wiki/`. Findings: no contradictions, no
+  stale `updated` dates, no orphan pages (every concept page has ≥1 inbound
+  link), no un-ingested raw sources, no frontmatter gaps. One intentional
+  broken link (`[[fen]]` in `watchman.md`, already logged as a known gap)
+  and three unwritten-but-mentioned concepts: FEN (Solaris/illumos), Apple's
+  Endpoint Security (mentioned in `fsevents.md`/`watchman.md` as FSEvents'
+  suggested replacement, no page), and io_uring-based watching (mentioned
+  only in `CLAUDE.md`'s scope, never in `wiki/` body text).
+- Added `wiki/comparisons/recursive-watching.md`, the first page in
+  `comparisons/`: a table comparing native recursive-watch support across
+  all 7 OS mechanisms and 5 userspace libraries in the wiki, distinguishing
+  three models (native recursive watch / no recursion primitive / not
+  path-scoped at all). Highlights fanotify's mount/filesystem-wide marks as
+  the only race-free tree-wide primitive among the OS mechanisms. Linked
+  back from all 12 referenced concept pages' Related concepts sections, and
+  registered in `wiki/index.md`.
+- While building the comparison, caught and fixed an unsourced claim in
+  `concepts/fsnotify-go.md`: it asserted notify-rs "defaults to recursive
+  watching," but the ingested notify-rs README never states a recursive-
+  watch default either way. Softened to note this is unconfirmed rather than
+  assert it.
 - Ingested userspace-library sources: `raw/libuv-fs-event.txt`,
   `raw/watchman-cookies.md`, `raw/watchman-readme.md`,
   `raw/chokidar-readme.md`, `raw/notify-rs-readme.md`,

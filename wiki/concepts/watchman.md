@@ -74,6 +74,7 @@ watch mechanism ([[fen]]) is a documented gap elsewhere in this wiki.
 - [[chokidar]] / [[notify-rs]] / [[fsnotify-go]] — in-process libraries
   solving a narrower problem (one process, one watch) rather than Watchman's
   shared-daemon-plus-query-synchronization model.
+- [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
 
 ## Sources
 

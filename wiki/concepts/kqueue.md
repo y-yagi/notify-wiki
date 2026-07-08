@@ -119,6 +119,7 @@ through the same queue).
 - `[[fsevents]]` — Darwin's whole-tree, persistent, directory-granularity
   sibling; Apple's own guidance is kqueue for single-file fine-grained
   watching and FSEvents for passive large-tree monitoring.
+- [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
 
 ## Sources
 

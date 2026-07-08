@@ -28,8 +28,9 @@ one API.
   implemented**, each tracked against an open upstream issue rather than
   silently unsupported.
 - Does not watch subdirectories automatically — recursive watching is "on
-  the roadmap," unlike Chokidar and notify-rs, which both default to
-  recursive watching (with an opt-out/depth-limit, not opt-in).
+  the roadmap," unlike [[chokidar]], which defaults to recursive watching
+  (with a depth limit). notify-rs's README doesn't state its recursive-watch
+  default either way — not confirmed here.
 
 ## Limitations & gotchas
 
@@ -73,6 +74,7 @@ mechanism, which has no dedicated concept page yet.
   that page's Limitations section for the naming collision.
 - [[chokidar]] / [[notify-rs]] — both cite this library as a direct
   inspiration.
+- [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
 
 ## Sources
 

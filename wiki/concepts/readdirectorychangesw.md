@@ -102,6 +102,7 @@ whenever an application needs to know what happened.
 - `[[usn-journal]]` — the volume-wide, persistent alternative this API's own
   docs point to for whole-volume tracking; unlike this live per-directory
   handle, the journal survives app restarts and covers the whole volume.
+- [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
 
 ## Sources
 

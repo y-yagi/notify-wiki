@@ -29,7 +29,7 @@ on top of these (`libuv`, `watchman`, `chokidar`, `notify-rs`, Go's
 
 ## Comparisons
 
-_No pages yet._
+- [recursive-watching](comparisons/recursive-watching.md) — which mechanisms/libraries support watching a directory tree natively vs. requiring the caller to walk and register every subdirectory itself
 
 ## Sources
 

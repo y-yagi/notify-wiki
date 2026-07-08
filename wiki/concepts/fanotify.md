@@ -134,6 +134,7 @@ socket read via `getsockopt(2)`) was replaced before shipping by the
 - `[[fsnotify]]` — the shared in-kernel backend fanotify was actually
   designed to require; see that page for the group/dispatch model and the
   pre-merge socket-based API proposal.
+- [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
 
 ## Sources
 

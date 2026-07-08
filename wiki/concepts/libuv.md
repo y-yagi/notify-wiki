@@ -72,6 +72,7 @@ z/OS-specific backend not covered elsewhere in this wiki.
 - [[chokidar]] — a comparable "smooth over native event differences"
   library, but for Node's `fs.watch`/`fs.watchFile` rather than libuv
   directly (Node's `fs.watch` is itself built on libuv's `uv_fs_event_t`).
+- [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
 
 ## Sources
 

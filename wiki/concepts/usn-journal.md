@@ -101,6 +101,7 @@ changes to a set of files.
 - `[[inotify]]` / `[[fanotify]]` — neither has a persistent, replayable log;
   both are live-only, in-memory event streams that lose everything once the
   fd is closed or the queue overflows.
+- [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
 
 ## Sources
 

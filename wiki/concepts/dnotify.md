@@ -64,6 +64,7 @@ different delivery mechanism: signals instead of a readable file descriptor.
 - [[fsnotify]] — the common in-kernel backend dnotify was re-implemented on
   top of when it merged for Linux 2.6.31 (its fcntl/signal-based userspace
   API was unaffected).
+- [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
 
 ## Sources
 

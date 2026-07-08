@@ -175,6 +175,7 @@ Read-only flags (only ever appear in the returned mask, never settable):
   buffer/fd the app reads, with similar full-rescan-on-overflow requirements.
 - `[[fsnotify]]` — the shared in-kernel backend inotify has been implemented
   on top of since Linux 2.6.31.
+- [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
 
 ## Sources
 
