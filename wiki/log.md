@@ -1,6 +1,21 @@
 # Change log
 
 ## 2026-07-08
+- Ingested `raw/lwn-fsnotify-unified-backend.txt` (Eric Paris's original fsnotify
+  patch mail, Feb 2009, archived on LWN) and `raw/lwn-fanotify-api.txt` ("The
+  fanotify API" by Jonathan Corbet, LWN, July 2009). Added
+  `wiki/sources/lwn-fsnotify-unified-backend.md` and
+  `wiki/sources/lwn-fanotify-api.md`, and a new `wiki/concepts/fsnotify.md`
+  (the shared in-kernel backend for dnotify/inotify/fanotify: group/dispatch
+  model, `FS_*`/`IN_*` bit parity, `*_CHILD` bits, why fanotify's global-
+  listener mode is what actually forced the common backend into existence).
+  Cross-linked from and into `concepts/inotify.md`, `concepts/dnotify.md`,
+  `concepts/fanotify.md`. Updated `wiki/index.md`. (Note: the LWN article
+  describes fanotify's originally-proposed socket/`getsockopt()`-based API,
+  which differs from the syscall-based API that actually shipped and is
+  documented in `concepts/fanotify.md` — flagged in both pages rather than
+  treated as a contradiction, since both are accurate for their own point in
+  time.)
 - Ingested `raw/msdn-fsutil-usn.txt` (`fsutil usn` command reference, Microsoft Learn). Added `wiki/sources/msdn-fsutil-usn.md` and `wiki/concepts/usn-journal.md` (NTFS USN change journal: persistent whole-volume append-only log, `fsutil usn` subcommands, journal-disable cost/blast-radius, range tracking). Cross-linked from `concepts/readdirectorychangesw.md`. Updated `wiki/index.md`.
 - Ingested `raw/msdn-readdirectorychangesw.txt` (Win32 `ReadDirectoryChangesW` reference, Microsoft Learn). Added `wiki/sources/msdn-readdirectorychangesw.md` and `wiki/concepts/readdirectorychangesw.md` (FILE_NOTIFY_INFORMATION-based reporting, sync/async/IOCP delivery, buffer-overflow-discards-changes gotcha, network buffer cap). Resolved the `ReadDirectoryChangesW` placeholder in `concepts/findfirstchangenotification.md`; cross-linked from `concepts/inotify.md` and `concepts/fsevents.md`. Updated `wiki/index.md`.
 - Ingested `raw/msdn-findfirstchangenotificationa.txt` (Win32 `FindFirstChangeNotificationA` reference, Microsoft Learn). Added `wiki/sources/msdn-findfirstchangenotificationa.md` and `wiki/concepts/findfirstchangenotification.md` (handle-based wait model, filter flags, no change-detail reporting, symlink caveats, platform/network-FS caveats). Cross-linked from `concepts/inotify.md` and `concepts/fsevents.md`. Updated `wiki/index.md`. (Note: originally-requested ja-jp URL required sign-in/authorization when fetched; used the en-us URL instead per user correction.)

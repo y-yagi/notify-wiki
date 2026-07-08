@@ -9,6 +9,7 @@ See `/CLAUDE.md` for how this wiki is organized and maintained.
 - [fanotify](concepts/fanotify.md)
 - [findfirstchangenotification](concepts/findfirstchangenotification.md)
 - [fsevents](concepts/fsevents.md)
+- [fsnotify](concepts/fsnotify.md)
 - [inotify](concepts/inotify.md)
 - [kqueue](concepts/kqueue.md)
 - [readdirectorychangesw](concepts/readdirectorychangesw.md)
@@ -32,6 +33,8 @@ _No pages yet._
 - [msdn-fsutil-usn](sources/msdn-fsutil-usn.md) — fsutil usn command reference (Microsoft Learn)
 - [msdn-readdirectorychangesw](sources/msdn-readdirectorychangesw.md) — ReadDirectoryChangesW function (Microsoft Learn)
 - [openbsd-kqueue-2](sources/openbsd-kqueue-2.md) — kqueue(2) man page (man.openbsd.org)
+- [lwn-fsnotify-unified-backend](sources/lwn-fsnotify-unified-backend.md) — fsnotify unified backend patch mail (LWN.net archive)
+- [lwn-fanotify-api](sources/lwn-fanotify-api.md) — "The fanotify API" (LWN.net)
 
 ## Log
 

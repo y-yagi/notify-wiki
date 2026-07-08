@@ -1,0 +1,459 @@
+The fanotify API
+https://lwn.net/Articles/339399/
+By Jonathan Corbet July 1, 2009
+
+By
+Jonathan Corbet
+July 1, 2009
+One of the features merged for 2.6.31 is the "fsnotify" file event
+notification framework.  Fsnotify serves as a new, common underpinning for
+the inotify and dnotify APIs, simplifying the code considerably.  But this
+simplification, as welcome as it is, was never the real purpose behind
+fsnotify.  Instead, fsnotify exists to serve as the support structure for
+fanotify
+, the "fscking all
+notification system," which has now been posted for further review.
+Fanotify was once known as
+TALPA
+; its main purpose is to
+enable the implementation of malware scanners on Linux systems.  When TALPA
+was first proposed, it ran into criticism on a number of fronts, not the
+least of which being a general disdain for malware scanning as a security
+technique.  The sad fact of the matter, though, is that a number of
+customers require this functionality, so a market for such products on
+Linux exists.  Thus far, scanning products for Linux have relied on a
+number of distasteful techniques, including hooking into the system call
+table or the loading of binary-only security modules.  Fanotify, it is
+hoped, will help to wean these products off of such hacks and get them out
+of the kernel altogether.
+The user-space API used by fanotify is, to your editor's eye, a little
+strange.  An fanotify application starts by opening a socket with the new
+PF_FANOTIFY
+protocol family.  This socket must then be bound to an
+"address" described this way:
+struct fanotify_addr {
+	sa_family_t family;
+	__u32 priority;
+	__u32 group_num;
+	__u32 mask;
+	__u32 timeout;
+	__u32 unused[16];
+    };
+$ sudo subscribe today
+Subscribe today and elevate your LWN privileges. You’ll have
+access to all of LWN’s high-quality articles as soon as they’re
+published, and help support LWN in the process.
+Act now
+and you can start with a free trial subscription.
+The
+family
+field should be
+AF_FANOTIFY
+.  The
+priority
+field is used to determine which socket gets a specific
+event if more than one fanotify socket exists; lower priority values win.
+The
+group_num
+is used by the fsnotify layer to identify a group of
+event listeners.  The
+timeout
+field currently appears to be
+unused.  Finally,
+mask
+describes the events that the application
+is interested in hearing about:
+FAN_ACCESS
+: every file access.
+FAN_MODIFY
+: file modifications.
+FAN_CLOSE
+: when files are closed.
+FAN_OPEN
+:
+open()
+calls.
+FAN_ACCESS_PERM
+: like
+FAN_ACCESS
+, except that the 
+     process trying to access the file is put on hold while the fanotify
+     client decides whether to allow the operation.
+FAN_OPEN_PERM
+: like
+FAN_OPEN
+, but with the
+     permission check.
+FAN_EVENT_ON_CHILD
+: the caller is interested in events on 
+     full directory hierarchies.
+FAN_GLOBAL_LISTENER
+: notify for events on all files in the
+     system.
+Once the socket has been bound, the application can learn about filesystem
+activity using the well-known event-reading system call
+getsockopt()
+.  A call to
+getsockopt()
+with
+SOL_FANOTIFY
+as the level and
+FANOTIFY_GET_EVENT
+as the
+option will return one or more structures like this:
+struct fanotify_event_metadata {
+	__u32 event_len;
+	__s32 fd;
+	__u32 mask;
+	__u32 f_flags;
+	pid_t pid;
+	pid_t tgid;
+	__u64 cookie;
+    };
+Here,
+fd
+is an open, read-only file descriptor for the file in
+question,
+mask
+describes the event (using the flags described
+above),
+f_flags
+is a copy of the flags provided by the process
+trying to access the file, and
+pid
+and
+tgid
+identify that
+process (in a namespace-unaware way, currently).  If the event is one
+requiring permission from the application,
+cookie
+will contain a
+value which can be used to grant or deny that permission.
+Note that the provided file descriptor should eventually be closed;
+otherwise these file descriptors are likely to accumulate rather quickly.
+When access decisions are being made, the application must notify the
+kernel with a call to
+setsockopt()
+using the
+FANOTIFY_ACCESS_RESPONSE
+option and a structure like:
+struct fanotify_so_access {
+	__u64 cookie;
+	__u32 response;
+    };
+The
+cookie
+value from the event should be provided, and
+response
+should be one of
+FAN_ALLOW
+or
+FAN_DENY
+.  If the application does not respond within five
+seconds, the kernel will allow the action to proceed.  Five seconds should
+be sufficient for file scanning, but it could be a problem with some other
+possible applications of fanotify, such as hierarchical storage management
+systems.  Fanotify developer Eric Paris
+notes
+that a future option allowing the
+response to be delayed indefinitely will probably be added at some point.
+It is possible to adjust the set of files subject to notifications with the
+FANOTIFY_SET_MARK
+,
+FANOTIFY_REMOVE_MARK
+, and
+FANOTIFY_CLEAR_MARKS
+operations.  If the
+FAN_GLOBAL_LISTENER
+option was provided at bind time, then all
+files are "marked" at the outset;
+FANOTIFY_REMOVE_MARK
+can be used
+to prune those which are not interesting.  Otherwise at least one
+FANOTIFY_SET_MARK
+call must be made before events will be
+returned.
+Some details have been left out, but the above discussion covers the core
+parts of the fanotify API.  Comments on this posting have been relatively
+scarce; opposition to this feature seems to have faded away over the last
+year or so.  What's left is getting the API right; your editor suspects
+that the use of
+getsockopt()
+as an event retrieval interface may
+raise a few eyebrows sooner or later.  But, once that's ironed out, chances
+are good that Linux will be well on the way toward having a general file
+access notification and permission interface.
+Index entries for this article
+Kernel
+fanotify
+Kernel
+Security/Security technologies
+to post comments
+The fanotify API
+Posted Jul 2, 2009 1:14 UTC (Thu)
+                               by
+jamesmrh
+(guest, #31622)
+                              [
+Link
+]
+It might get more comments if posted to fsdevel & cc'd to previous commenters.
+*getsockopt*, of all things?
+Posted Jul 2, 2009 5:13 UTC (Thu)
+                               by
+quotemstr
+(subscriber, #45331)
+                              [
+Link
+] (6 responses)
+What's wrong with sendmsg/recvmsg? Isn't that the interface commonly-used for special purpose messages over sockets? That's how SCM_RIGHTS works, after all. Come to think of it, aren't there a dozen or so  kernel<->userspace interfaces that work?
+*getsockopt*, of all things?
+Posted Jul 2, 2009 16:22 UTC (Thu)
+                               by
+RobSeace
+(subscriber, #4435)
+                              [
+Link
+] (5 responses)
+Yeah, I don't understand why even normal I/O wouldn't be sufficient, without even needing control messages...  But, even control messages sound better than using a socket option for something like this...
+How exactly are apps to be notified that a new event is ready to be retrieved?  Will they select()/poll() as readable still, even though you don't actually read from them to get the event data?
+*getsockopt*, of all things?
+Posted Jul 2, 2009 16:39 UTC (Thu)
+                               by
+quotemstr
+(subscriber, #45331)
+                              [
+Link
+] (4 responses)
+Normal IO isn't sufficient because we need to send a file descriptor over the socket. I think the original author decided to go with a new socket family because there's no way to send a file descriptor over an AF_NETLINK socket.
+Speaking of which, AF_NETLINK seems to be exactly what's needed here, just extended to support sending file descriptors over ancillary messages.
+Of course, the other option is to just create a device node and use
+ioctl
+. That's frowned upon, but what harm does it really do? Plus, using a device node allows you to restrict access to the device using all the usual UNIX-permission-and-POSIX-ACL goodness available anywhere else.
+*getsockopt*, of all things?
+Posted Jul 2, 2009 18:01 UTC (Thu)
+                               by
+RobSeace
+(subscriber, #4435)
+                              [
+Link
+] (3 responses)
+Oh yeah, I kind of missed the whole FD passing part of the API...  (Is that really necessary, instead of, say, giving the filename and letting the app do its own open, or whatever it wants to do to the file?)
+But, yeah, I think your netlink + control message idea sounds a lot better than this method, anyway...  I still don't get how the app will be notified when it's supposed to do the getsockopt(), unless select()/poll() gets kluged up to falsely indicate readability (when you can't really read from it) when one of these events are ready to be retrieved...
+*getsockopt*, of all things?
+Posted Jul 2, 2009 18:05 UTC (Thu)
+                               by
+quotemstr
+(subscriber, #45331)
+                              [
+Link
+] (1 responses)
+giving the filename and letting the app do its own open
+Racetastic, yes?
+select()/poll() gets kluged up to falsely indicate readability
+Well, to be fair, select even on ordinary objects doesn't indicate readability. It's more like "it might have been readable sometime in the recent past, if you're lucky". That's why you always call select() on non-blocking sockets, and why you always prepare to get EAGAIN even after select() reports a file descriptor to be readable.
+*getsockopt*, of all things?
+Posted Jul 2, 2009 18:41 UTC (Thu)
+                               by
+RobSeace
+(subscriber, #4435)
+                              [
+Link
+]
+Yeah, but this sounds even worse than that, since it was never truly readable at all, but merely has a sockopt ready to be gotten... *shrug*  It just sounds like an ugly kluge to me...
+How about just treating the socket as if it were a listening socket, and use accept() to return the FD (and fill the other related necessary info into the returned client sockaddr)?  Then, readability on the listener fits the already established model for normal listening sockets, to indicate a new connection to accept, and no need for any klugey FD passing behavior...  Of course, returning a non-socket FD from accept() is probably just as ugly a kluge, I suppose... *shrug*
+*getsockopt*, of all things?
+Posted Jul 10, 2009 23:28 UTC (Fri)
+                               by
+efexis
+(guest, #26355)
+                              [
+Link
+]
+"(Is that really necessary, instead of, say, giving the filename and letting the app do its own open, or whatever it wants to do to the file?)"
+That would require the scanner (or whatever) to be running with permission to open any file on the file system... you might not want that. Much more secure to pass it a read-only already-open filehandle, and allow it to run as an unprivileged user.
+The fanotify API
+Posted Jul 2, 2009 9:13 UTC (Thu)
+                               by
+nix
+(subscriber, #2304)
+                              [
+Link
+] (1 responses)
+*Finally* we can write efficient indexers and a non-disk-bashing locate(1)
+that doesn't rely on weird kernel hacks (was it rlocate that used a custom
+*LSM*, of all things, to trap file creations?)
+The fanotify API
+Posted Jul 2, 2009 20:44 UTC (Thu)
+                               by
+anton
+(subscriber, #25547)
+                              [
+Link
+]
+Yes, the version of
+rlocate
+for Linux-2.6 used an LSM to be able to track changes to the
+file system.  The Linux-2.4 version used a more direct approach, but
+that had been blocked in 2.6.  AFAIK since 2.6.24 even the LSM
+approach no longer works.
+The fanotify API - corrections
+Posted Jul 2, 2009 14:21 UTC (Thu)
+                               by
+eparis
+(guest, #33060)
+                              [
+Link
+] (6 responses)
+It's not just for anti-malware snake oil vendors.  Userspace indexers seem interested, the readahead process to profile boot operation is interested, along with some storage management techniques, which you describe.
+"FAN_EVENT_ON_CHILD: the caller is interested in events on full directory hierarchies."
+It's only for the children of the inode in question.  So marking /tmp/dir will tell you about /tmp/dir/file, but not about /tmp/dir/subdir/file.  So it still has that same PITA problem of watching a complete directory tree as inotify.
+"If the FAN_GLOBAL_LISTENER option was provided at bind time, then all files are "marked" at the outset; FANOTIFY_REMOVE_MARK can be used to prune those which are not interesting;"
+Not quite true, if FAN_GLOBAL_LISTENER is provided at bind time then all file events matching the mask provided at bind time will be sent to the listener.  FANOTIFY_SET_MARK using the ignored_mask field is used to stop notification about events.
+The fanotify API - corrections
+Posted Jul 3, 2009 1:28 UTC (Fri)
+                               by
+jlokier
+(guest, #52227)
+                              [
+Link
+] (5 responses)
+Oh dear.  If it has the same silly open-the-whole-tree problem before you know you have all change events, it's *not* suitable for non-disk bashing indexers.
+And it's not suitable for non-disk bashing virus checkers / tripwire-like programs either.
+Disk bashing is what happens each time you restart or remount a filesystem.  Just to traverse the directory tree to set inotify events on it.
+Last time I discussed this with Tracker folks, their answer was "most users don't have a lot of files, you are unusual as only developers typically have lots of files and a rich directory tree".
+Thanks, guys.  What happened to doing things right?
+Occasionally a thoughtful response emerges: "but you can't notify all the parent directories if a hard-linked file is modified".  A natural gut instinct, but mistaken.
+inotify already determines parent directories of all files, including linked ones, in a path-based manner: when you change a file, it follows the path used to access the file to notify listeners on the containing directory.  Linked files can be monitored accurately by either watching the inode itself, or watching all known parent directories, which you can verify from the link count and bind-mount points - a userspace problem.
+So do the obvious thing, and notify listeners on all containing directories up the whole path used to access the file.  (And provide an IN_ATTRIB event when the link count is incremented by linking - seen by watchers on the source path - currently that omission makes directory inotify unsuitable for verifying lack of file changes even with deep tree traversal at the moment).
+Then userspace has enough to watch whole trees with the same fidelity as it can now, but much more efficiently - no massive traversal required.  No disk bashing.  It'd be nice to catch up with Windows 2000 in this department.
+The fanotify API - corrections
+Posted Jul 3, 2009 11:04 UTC (Fri)
+                               by
+brother_rat
+(subscriber, #1895)
+                              [
+Link
+] (4 responses)
+I think you've misunderstood things. Try reading the original
+announcement
+and you'll see how simple it is to watch the entire file system. In particular:
+fanotify has two basic 'modes' directed and global.  fanotify directed
+works much like inotify in that userspace marks inodes it is interested
+in and gets events from those inodes.  fanotify global instead indicates
+that it wants everything on the system and then individually marks
+inodes that it doesn't care about.  They both have the same userspace
+interface and rely on the same fsnotify in kernel infrastrucute
+(although the infrastructure did have to modified to support the global
+listener concept)
+Also look at the example program at the end of the e-mail.
+The fanotify API - corrections
+Posted Jul 4, 2009 9:43 UTC (Sat)
+                               by
+jlokier
+(guest, #52227)
+                              [
+Link
+] (3 responses)
+The global mode does work if you want to monitor everything, system-wide, but it is too broad-scope if you just want to monitor, say, $HOME.  Or /var/www/databases.  Etc., you get the idea.  There are many good reasons to monitor everything below a particular directory.  Especially on multi-user systems.  An off the wall example: Recursively monitoring changes below $PWD would be useful for speeding up programs like Make and Git between invocations.  Recursively monitoring $HOME is appropriate for personal indexers on multi-user systems.
+So the obvious thing to do is improve inotify to provide recursive notifications, instead of Yet Another API to a slightly different mix of the same features.  IN_RECURSIVE: "notify this directory of events occuring on any path below the directory, not just immediately below the directory".  There you go.  Making it efficient is left as an exercise :-) (hint: lazily propagate flags up and down the dentry tree)
+That's notifications.  The other part is blocking operations on files - the filtering part.  We already have a mechanism for that, too: leases.  The F_SETLEASE API is clearly not suitable, but the underlying lease mechanism is close.  Suggestion: return a leased file descriptor alongside an inotify event if IN_LEASE_* flags are set.  Use F_SETLEASE or something like it to release a lease, granting or denying permission.
+In it's present form it is sure to be rejected due to the very strange and unnecessary API, and it  which looks like it was written by people who did not read the history of inotify's inclusion into the kernel.  inotify has it's own system calls because the original version was rejected on l-k, and told to use system calls because it's not a device or socket.
+As a small incremental change to inotify, it's much more likely to be accepted, and it's also much more likely to be useful for applications you haven't thought of.
+There might still be a reason to add a netlink socket API as well (though I can't think of one), but if so it should be a general addition to inotify, not a complete replacement which happens to be like inotify in some ways and different in others.
+We already have F_NOTIFY, inotify and F_SETLEASE.  We don't need yet another slightly different but nearly the same thing, which happens to be useful for a tiny set of applications but still very limited in arbitrary ways, when a little incremental improvement to inotify would be both cleaner and useful for a lot more applications.
+Don't get me wrong, inotify has flaws, but together with leases, it's not far off what the fanotify-using applications need.  I strongly advocate fixing them, rather than starting again.
+This discussion should be on linux-fsdevel...
+The fanotify API - corrections
+Posted Jul 10, 2009 23:53 UTC (Fri)
+                               by
+efexis
+(guest, #26355)
+                              [
+Link
+] (2 responses)
+The global method should work fine then surely; set a global listener, and ignore any notifications where the pathname doesn't begin with your required string (eg, '/home/'). If you're worried that that'll get triggered more often that it need be (esp if you want different trees monitored for different purposes) then it's not much work to create a plugable super-server that listens globally and hands you the notifications you're interested in... then everyone can have their own monitoring process for their own home directory, without there being several processes woken with each file opened... and the super-server could do extra things like make sure the monitor has read access to the file opened before handing it the FD.
+Also, the fact that inotify and dnotify code can be dropped from the kernel and replaced by slim wrappers around these calls instead makes sense from a code tidying/maintenance point of view. If you really think that inotify is the interface you want to use, but want it to be able to watch entire sections of the filesystem (a 'recurse' flag), then as inotify will become a wrapper around this interface that will allow you to do it, it's really not going to be hard for you to add that feature to it.
+The fanotify API - corrections
+Posted Jul 14, 2009 22:30 UTC (Tue)
+                               by
+icculus
+(guest, #4942)
+                              [
+Link
+] (1 responses)
+"...ignore any notifications where the pathname doesn't begin with your
+required string (eg, '/home/')"
+I don't see a way to get an actual path from this API, just the file
+handle.
+The fanotify API - corrections
+Posted Jul 18, 2009 7:22 UTC (Sat)
+                               by
+efexis
+(guest, #26355)
+                              [
+Link
+]
+Oh yeah it certainly does look like that... it can't possibly be true though, after all, how would a virus scanner warn of which file is infected without path information? How would it move or delete the file without knowing what directory it's in? It would also make it useless for an indexing system, as the indexing system is surely a file contents/metadata <--> file path lookup, so without the path, it's useless. You couldn't tie it to git or anything to monitor for code changes because you wouldn't know what file's being changed.
+Is there no file descriptor path lookup method? Would it not appear in /proc/self/fd/? There's gotta be a way otherwise surely this patch would just be laughed out.
+The fanotify API
+Posted Aug 18, 2009 5:49 UTC (Tue)
+                               by
+rawler
+(guest, #60308)
+                              [
+Link
+] (2 responses)
+I can also see two relevant use-cases not mentioned here;
+File-system-optimisation; While ext4 now have aquired defragmentation, I
+still haven't seen any way in Linux other than the old tar/untar-way to
+re-optimise files and directories for proximity to reduce seek-time.
+(Say, for the apt/dpkg database). With this, it seems it would be
+possible having a low-priority daemon tracking file-access-order, and on
+system-idle (say, screensaver-time) simulate a tar/untar in frequent-
+access-order to reorder them into better-on-disk positions.
+Clutter removal; Now with the atime defaulting to relatime, it's getting
+a bit harder to find old unused stuff, and wipe unused packages etc. This
+new API should allow creating an ionice:d daemon with lax disk-queuing
+track usage of files in the system, mapped to apt-packages, and track how
+often packages are actually used. Given that accessing-process-info is
+now also monitored, it may even be possible to prune indexers, grep and
+friend from polluting the data. (By name, or by tracking access-patterns.
+If something walks every file in a directory, we could probably ignore
+it)
+The fanotify API
+Posted May 19, 2011 0:27 UTC (Thu)
+                               by
+anjwicks
+(guest, #75008)
+                              [
+Link
+] (1 responses)
+A use case you mentioned is exactly why I'm interested in fanotify. I tried very hard to make inotify work for this purpose but could not get the information I needed (scan and parse /proc) in time (the event would be gone by the time I got around to finding it). The problem is, inotify simply didn't provide the pid of the process who triggered the event.
+I am excited about fanotify and found out about it just in time. I want to thank Eric and the other guys who put in the work and provided the capabilities.
+I'm going to try to use fanotify to help tune a Linux installation based on what software is actually being used. There is a tool out there like this called popcon, but it is difficult to get proper precision based on atime accesses.
+Currently, I'm only interested in OPEN events and don't yet care about blocking events. So, this will work just fine.
+The reason I mentioned all of this is because I'm under the impression the tool I need doesn't exist. So I'm off to try to make it. If anybody knows of something already completed, please stop me now! :) -jeff wicks
+The fanotify API
+Posted May 19, 2011 4:04 UTC (Thu)
+                               by
+dtlin
+(subscriber, #36537)
+                              [
+Link
+]
+Kinda expensive/verbose, but
+auditd
+would work, wouldn't it?
+Fanotify has a bug in kernel 3.1 or below
+Posted Oct 12, 2011 3:38 UTC (Wed)
+                               by
+searockcliff
+(guest, #76465)
+                              [
+Link
+]
+Fanotify has a bug.
+http://stackoverflow.com/questions/7566755/multi-thread-o...
+here is a patch for kernel 3.1:
+http://marc.info/?l=linux-kernel&m=131822913806350&...

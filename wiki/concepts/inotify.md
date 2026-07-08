@@ -2,7 +2,7 @@
 title: inotify
 tags: [linux, kernel, event-driven]
 updated: 2026-07-08
-sources: ["../sources/man7-inotify-7.md"]
+sources: ["../sources/man7-inotify-7.md", "../sources/lwn-fsnotify-unified-backend.md"]
 ---
 
 # inotify
@@ -15,7 +15,10 @@ interfaces landed in glibc 2.4 (with `IN_DONT_FOLLOW`, `IN_MASK_ADD`, and
 `IN_ONLYDIR` following in glibc 2.5). It solves the problem of detecting file
 changes (writes, creates, deletes, renames, attribute changes, opens/closes)
 without polling, by having the application read structured event records off
-a dedicated file descriptor.
+a dedicated file descriptor. Since Linux 2.6.31, inotify's kernel-side event
+delivery has been re-implemented on top of [[fsnotify]], the common backend
+it now shares with [[dnotify]] and [[fanotify]]; this changed nothing about
+the userspace-visible API.
 
 ## API / semantics
 
@@ -170,7 +173,10 @@ Read-only flags (only ever appear in the returned mask, never settable):
 - `[[readdirectorychangesw]]` — Windows' closer analogue to inotify's event
   model: both deliver structured records (filename + change type) over a
   buffer/fd the app reads, with similar full-rescan-on-overflow requirements.
+- `[[fsnotify]]` — the shared in-kernel backend inotify has been implemented
+  on top of since Linux 2.6.31.
 
 ## Sources
 
 - [man7-inotify-7](../sources/man7-inotify-7.md)
+- [lwn-fsnotify-unified-backend](../sources/lwn-fsnotify-unified-backend.md)

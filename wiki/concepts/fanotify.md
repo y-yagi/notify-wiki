@@ -2,7 +2,7 @@
 title: fanotify
 tags: [linux, kernel, event-driven, access-control]
 updated: 2026-07-08
-sources: ["../sources/man7-fanotify-7.md"]
+sources: ["../sources/man7-fanotify-7.md", "../sources/lwn-fsnotify-unified-backend.md", "../sources/lwn-fanotify-api.md"]
 ---
 
 # fanotify
@@ -21,6 +21,14 @@ an open fd per object.
 Its create/delete/move event coverage was added late: the original API had no
 equivalent of inotify's `IN_CREATE`/`IN_DELETE`/`IN_MOVED_*`, and applications
 needing those before Linux 5.1 had to use inotify instead.
+
+fanotify was the actual reason the [[fsnotify]] kernel backend was built: its
+"global listener" mode (watching every file on the system, not just
+individually-marked ones) needed a group/dispatch model beyond what dnotify
+and inotify required on their own. The userspace API changed materially
+between proposal and merge — the version first posted (a `PF_FANOTIFY`
+socket read via `getsockopt(2)`) was replaced before shipping by the
+`fanotify_init(2)`/`fanotify_mark(2)` syscalls documented below.
 
 ## API / semantics
 
@@ -123,7 +131,12 @@ needing those before Linux 5.1 had to use inotify instead.
   (fanotify only gained it in Linux 5.1).
 - `[[dnotify]]` — inotify's own predecessor; not directly related to fanotify
   beyond being an earlier point in the same lineage.
+- `[[fsnotify]]` — the shared in-kernel backend fanotify was actually
+  designed to require; see that page for the group/dispatch model and the
+  pre-merge socket-based API proposal.
 
 ## Sources
 
 - [man7-fanotify-7](../sources/man7-fanotify-7.md)
+- [lwn-fsnotify-unified-backend](../sources/lwn-fsnotify-unified-backend.md)
+- [lwn-fanotify-api](../sources/lwn-fanotify-api.md)

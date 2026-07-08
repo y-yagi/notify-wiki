@@ -2,7 +2,7 @@
 title: dnotify
 tags: [linux, kernel, event-driven, deprecated]
 updated: 2026-07-08
-sources: ["../sources/kernel-dnotify.md"]
+sources: ["../sources/kernel-dnotify.md", "../sources/lwn-fsnotify-unified-backend.md"]
 ---
 
 # dnotify
@@ -61,7 +61,11 @@ different delivery mechanism: signals instead of a readable file descriptor.
 
 - [[inotify]] — direct successor; replaced dnotify in Linux 2.6.13 with a
   readable-fd model, per-file watches, and filename-carrying events.
+- [[fsnotify]] — the common in-kernel backend dnotify was re-implemented on
+  top of when it merged for Linux 2.6.31 (its fcntl/signal-based userspace
+  API was unaffected).
 
 ## Sources
 
 - [kernel-dnotify](../sources/kernel-dnotify.md)
+- [lwn-fsnotify-unified-backend](../sources/lwn-fsnotify-unified-backend.md)
