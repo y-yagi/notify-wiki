@@ -1,0 +1,17 @@
+Source: Quora
+URL: https://www.quora.com/Inotify-monitoring-of-directories-is-not-recursive-Is-there-any-specific-reason-for-this-design-in-Linux-kernel
+Question: "Inotify monitoring of directories is not recursive. Is there any specific reason for this design in Linux kernel?"
+Answer by: Robert Love (co-designer of inotify, along with John McCutchan)
+Fetched/transcribed: 2026-07-09 (pasted verbatim by user; original page returns HTTP 403 to automated fetches)
+
+---
+
+Yes. When John McCutchan and I were designing inotify, we desired to include recursive notifications. Indeed, my main motivation at the time was desktop indexing systems such as Beagle, where a recursive notification on your home directory would have been ideal.
+
+Unfortunately, implementing recursive monitoring—actually, any recursive filesystem operation—in the Linux kernel is very expensive. In many filesystems, including Unix-style ones, recursing down a directory hierarchy isn't a first class operation. In Unix, you iterate over and transcend into directories by doing just that: You list the contents of a directory and for each content that is itself a directory, you transcend into it, and repeat. This is how user-space utilities such as find(1) work.
+
+You could replicate this algorithm in the kernel—technically and physically, nothing prevents it—but the performance of the system would suffer. This is much too long-running an operation to perform inside the kernel, particularly if you were to do so while holding the appropriate locks. Given that the kernel has no advantage over user-space but does bear several costs, it makes sense for inotify to not directly support recursion.
+
+Instead, my hope was that user-space libraries would provide the recursion. It would be slow—traversing directories always is—but it would be slow even if the kernel implemented it. With most filesystems, there is no cheap non-hack way to enumerate all directories.
+
+(As an aside, the one downside to user-space-implemented recursive monitoring is that there is a potential race wherein a new directory is created inside a to-be-monitored directory hierarchy but said directory ends up unwatched. This race is obviated via an algorithm we called Love-Trowbridge: https://mail.gnome.org/archives/dashboard-hackers/2004-October/thread.html#00022)

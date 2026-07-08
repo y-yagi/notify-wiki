@@ -1,0 +1,53 @@
+Source: Wikipedia
+URL: https://en.wikipedia.org/wiki/Robert_Love
+Fetched: 2026-07-09
+Note: retrieved via automated fetch-and-summarize (WebFetch), not a verbatim
+copy of the article wikitext — this is a condensed summary of the page's
+content at fetch time, not primary-source-grade verbatim text like the other
+raw/ entries. Treat accordingly; re-fetch the live article for exact wording.
+
+---
+
+Robert M. Love is an American software engineer, author, and speaker born
+around 1981 in south Florida. He's known for significant contributions to
+the Linux kernel and open-source software.
+
+Education: He attended Charles W. Flanagan High School, then the University
+of Florida, where he earned a Bachelor of Arts in Mathematics and a Bachelor
+of Science in Computer Science.
+
+Kernel and Open Source Work: Love is credited with notable Linux kernel
+contributions including the preemptive kernel, process scheduler, kernel
+event layer, virtual memory subsystem, and inotify. He began kernel work
+while still in college, employed at MontaVista Software.
+
+Regarding inotify, the article notes he worked on it during his time at
+Novell (after Ximian's acquisition), alongside other kernel and GNOME
+projects like Beagle. It references an email he sent introducing inotify to
+the kernel community, and an article he wrote titled "Kernel Korner - Intro
+to inotify" for Linux Journal in 2005. The article doesn't mention dnotify
+directly in connection with Love, though dnotify is referenced elsewhere as
+a related Linux-only kernel interface.
+
+Professional Background:
+- Worked at MontaVista Software as a kernel hacker during college
+- Joined Ximian in December 2003 as Senior Engineer in the Linux Desktop
+  Group
+- Led "Project Utopia" to improve hardware management integration on Linux
+  desktops
+- Became Chief Architect of SUSE Linux Enterprise Desktop after Novell
+  acquired Ximian
+- Left Novell in 2007 to join Google's then-unannounced Android team, where
+  he built its novel shared memory subsystem, ashmem
+- Served as Director of Engineering for Search Infrastructure at Google
+  through May 2021
+- Currently VP of Engineering at Toast, where he builds cloud platforms for
+  restaurants
+
+Writing: He authored Linux Kernel Development (three editions) and Linux
+System Programming, and co-authored Linux in a Nutshell. He's also a
+Contributing Editor for Linux Journal and has spoken at conferences
+including linux.conf.au, FOSDEM, and GUADEC (as a keynote speaker).
+
+He currently lives in Boston, Massachusetts, per the article (though marked
+as needing citation).

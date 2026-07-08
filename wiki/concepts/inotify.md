@@ -1,8 +1,8 @@
 ---
 title: inotify
 tags: [linux, kernel, event-driven]
-updated: 2026-07-08
-sources: ["../sources/man7-inotify-7.md", "../sources/lwn-fsnotify-unified-backend.md"]
+updated: 2026-07-09
+sources: ["../sources/man7-inotify-7.md", "../sources/lwn-fsnotify-unified-backend.md", "../sources/quora-love-inotify-recursive.md"]
 ---
 
 # inotify
@@ -118,6 +118,15 @@ Read-only flags (only ever appear in the returned mask, never settable):
   invalidate multiple cached pathnames at once.
 - **Not recursive** — watching a tree means watching every subdirectory individually,
   which is slow for large trees, plus the add-watch/scan race noted above.
+  Per co-designer Robert Love, this was a deliberate design choice, not an
+  oversight: recursive directory traversal isn't a first-class kernel
+  operation on Unix-style filesystems (it's iterative listing + descend, same
+  as userspace `find(1)`), so doing it inside the kernel — especially while
+  holding locks — would be a too-long-running operation for no benefit over
+  doing the same walk in userspace. The intent was for userspace libraries to
+  implement the recursive walk themselves; the add-watch/scan race this
+  creates is addressed by an algorithm Love and Trowbridge devised, referred
+  to as "Love-Trowbridge".
 - **Event coalescing** — consecutive identical events (same wd/mask/cookie/name)
   are coalesced into one if the older is still unread, so inotify cannot be
   used to reliably *count* events. (Before 2.6.25, the coalescing check was
@@ -181,3 +190,4 @@ Read-only flags (only ever appear in the returned mask, never settable):
 
 - [man7-inotify-7](../sources/man7-inotify-7.md)
 - [lwn-fsnotify-unified-backend](../sources/lwn-fsnotify-unified-backend.md)
+- [quora-love-inotify-recursive](../sources/quora-love-inotify-recursive.md)

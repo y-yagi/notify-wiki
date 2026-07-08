@@ -1,7 +1,7 @@
 ---
 title: "Comparison: recursive watching support"
 tags: [comparison, recursive-watching]
-updated: 2026-07-08
+updated: 2026-07-09
 ---
 
 # Recursive watching support
@@ -48,6 +48,15 @@ answers, not just yes/no:
   (dnotify, inotify, kqueue) requires the caller to walk the tree and accept
   a window where a subdirectory can be created and populated before its
   watch is registered.
+- **Why [[inotify]] specifically left recursion out**: per co-designer Robert
+  Love, it wasn't an oversight — recursive directory traversal isn't a
+  first-class kernel operation on Unix-style filesystems, so doing the walk
+  inside the kernel (particularly while holding locks) would be too
+  long-running for no real benefit over doing the same walk in userspace; the
+  intent was for userspace libraries to implement recursion themselves. See
+  [quora-love-inotify-recursive](../sources/quora-love-inotify-recursive.md).
+  Not confirmed here whether the same reasoning applied to dnotify's or
+  kqueue's design — no source in this wiki documents their design discussions.
 - Libraries that claim recursive support either (a) inherit it for free from
   a native OS primitive ([[libuv]] on macOS/Windows), or (b) must be doing
   the walk-and-register work themselves in userspace when the backend has no

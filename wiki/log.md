@@ -1,5 +1,28 @@
 # Change log
 
+## 2026-07-09
+- Ingested `raw/wikipedia-robert-love.txt` (Wikipedia's "Robert Love" article,
+  fetched/summarized 2026-07-09 — not verbatim wikitext, flagged as
+  lower-confidence than the wiki's other `raw/` sources). Added
+  `wiki/sources/wikipedia-robert-love.md` as background/credibility context
+  for the Quora design-rationale source below; cross-linked from
+  `wiki/sources/quora-love-inotify-recursive.md`. Not linked into any
+  `concepts/` page — purely biographical, out of this wiki's technical scope.
+- Ingested `raw/quora-love-inotify-recursive.txt` (Robert Love's Quora answer
+  explaining why inotify doesn't support recursive watching — a
+  design-rationale source pasted verbatim by the user after the live page
+  returned HTTP 403 to automated fetches). Added
+  `wiki/sources/quora-love-inotify-recursive.md`. Updated the existing "Not
+  recursive" bullet in `concepts/inotify.md` with the design rationale
+  (kernel-side recursive traversal isn't a first-class Unix filesystem
+  operation and would be too long-running under kernel locks; intended to be
+  implemented in userspace instead, with the resulting add-watch/scan race
+  addressed by the "Love-Trowbridge" algorithm) and added the source to its
+  Sources list. Added a matching note to `comparisons/recursive-watching.md`'s
+  Takeaways, explicitly scoped to inotify only — no source here documents
+  dnotify's or kqueue's own design discussions, so the same rationale isn't
+  assumed to generalize to them.
+
 ## 2026-07-08
 - Ran a `/lint` health check across `wiki/`. Findings: no contradictions, no
   stale `updated` dates, no orphan pages (every concept page has ≥1 inbound
