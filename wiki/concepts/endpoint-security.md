@@ -111,6 +111,9 @@ cover, not its primary design goal.
 - [[kqueue]] — Apple's other, much lower-barrier-to-entry Darwin mechanism;
   contrast Endpoint Security's entitlement/TCC/deadline requirements against
   kqueue's plain `EVFILT_VNODE`, usable by any process on files it can open.
+- [[kqueue-vs-fsevents]] — cites Endpoint Security as the mechanism Apple
+  points to for guarantees (interception, quantified drop detection) that
+  neither kqueue nor FSEvents provide on their own.
 
 ## Sources
 

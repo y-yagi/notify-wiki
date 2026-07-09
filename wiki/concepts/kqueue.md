@@ -120,6 +120,7 @@ through the same queue).
   sibling; Apple's own guidance is kqueue for single-file fine-grained
   watching and FSEvents for passive large-tree monitoring.
 - [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
+- [[kqueue-vs-fsevents]] — systematic axis-by-axis comparison against FSEvents.
 
 ## Sources
 

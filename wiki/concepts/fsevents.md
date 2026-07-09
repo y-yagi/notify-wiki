@@ -166,6 +166,7 @@ event ID N (possibly days ago, possibly before I was even running)?"
   problem primarily (security monitoring/authorization) but covers file
   events too, without FSEvents' flush-guarantee gap.
 - [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
+- [[kqueue-vs-fsevents]] — systematic axis-by-axis comparison against kqueue.
 
 ## Sources
 

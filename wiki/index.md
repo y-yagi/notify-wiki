@@ -33,6 +33,7 @@ io_uring-based watching, mentioned only in `CLAUDE.md`'s scope, never in
 ## Comparisons
 
 - [recursive-watching](comparisons/recursive-watching.md) — which mechanisms/libraries support watching a directory tree natively vs. requiring the caller to walk and register every subdirectory itself
+- [kqueue-vs-fsevents](comparisons/kqueue-vs-fsevents.md) — axis-by-axis comparison of Darwin's two native file-watching mechanisms: granularity, timing, persistence, drop-detection, and where each has a real gap relative to the other
 
 ## Sources
 

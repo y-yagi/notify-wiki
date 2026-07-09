@@ -1,5 +1,24 @@
 # Change log
 
+## 2026-07-10
+- Added `wiki/comparisons/kqueue-vs-fsevents.md`, a new comparisons page
+  (requested after a `/query` on the same question) doing an axis-by-axis
+  comparison of Darwin's two native file-watching mechanisms: watch scope,
+  granularity, delivery timing, recursion, cross-reboot persistence,
+  coalescing, drop/overflow signaling, flush guarantees, permission model,
+  resource cost, and platform availability. Key finding surfaced in
+  Takeaways: FSEvents' most concrete gap relative to kqueue isn't a missing
+  feature but a broken guarantee — `FSEventStreamFlushSync` has been
+  observed (per Watchman's production notes, already on `concepts/fsevents.md`)
+  to return before all events actually arrive, a failure mode kqueue can't
+  have since it doesn't batch/flush at all. Also notes the gaps run both
+  ways: kqueue has no recursion primitive and no cross-reboot persistence,
+  which are FSEvents' reasons to exist. No new `raw/` sources ingested — page
+  synthesizes only from the existing `concepts/kqueue.md`,
+  `concepts/fsevents.md`, and `concepts/endpoint-security.md`. Added
+  backlinks from those three pages' and `concepts/fanotify.md`'s Related
+  concepts sections, and registered the new page in `wiki/index.md`.
+
 ## 2026-07-09
 - Added `concepts/endpoint-security.md`, a new concept page, resolving the
   "unwritten-but-mentioned concept" gap flagged in the 2026-07-08 health

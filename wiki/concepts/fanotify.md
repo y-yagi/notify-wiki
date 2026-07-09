@@ -135,6 +135,8 @@ socket read via `getsockopt(2)`) was replaced before shipping by the
   designed to require; see that page for the group/dispatch model and the
   pre-merge socket-based API proposal.
 - [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
+- [[kqueue-vs-fsevents]] — mentions fanotify as the Linux analogue to the
+  permission/interception gap both Darwin mechanisms share.
 
 ## Sources
 
