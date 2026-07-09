@@ -1,8 +1,8 @@
 ---
 title: notify-rs
 tags: [userspace-library, rust, cross-platform, event-driven]
-updated: 2026-07-08
-sources: ["../sources/notify-rs-readme.md"]
+updated: 2026-07-09
+sources: ["../sources/notify-rs-readme.md", "../sources/notify-rs-fsevent-rs.md"]
 ---
 
 # notify-rs
@@ -27,6 +27,12 @@ Node's [[chokidar]] as direct inspirations.
   separate opt-in crates, `notify-debouncer-mini` and
   `notify-debouncer-full`, rather than being built into the base watcher the
   way Chokidar's `awaitWriteFinish`/`atomic` options are.
+- When the [[fsevents]] backend is selected, notify-rs sets
+  `kFSEventStreamCreateFlagFileEvents` unconditionally — per-file granularity
+  with no opt-out, source-confirmed in
+  [notify-rs-fsevent-rs](../sources/notify-rs-fsevent-rs.md). Contrast with
+  [[watchman]], which defaults the same flag on but leaves it configurable.
+  Doesn't apply when the kqueue backend is chosen instead.
 
 ## Limitations & gotchas
 
@@ -47,7 +53,8 @@ picks one native mechanism per OS with no user-facing choice).
 ## Related concepts
 
 - [[inotify]], [[fsevents]], [[kqueue]], [[readdirectorychangesw]] — the
-  native mechanisms notify-rs dispatches to per platform.
+  native mechanisms notify-rs dispatches to per platform. The FSEvents
+  backend contributes unconditional per-file granularity, discussed above.
 - [[chokidar]] — cited inspiration; Node.js equivalent, bakes debounce logic
   into the core watcher rather than splitting it into separate crates.
 - [[fsnotify-go]] — cited inspiration; Go equivalent, notably still lacking
@@ -57,3 +64,4 @@ picks one native mechanism per OS with no user-facing choice).
 ## Sources
 
 - [notify-rs-readme](../sources/notify-rs-readme.md)
+- [notify-rs-fsevent-rs](../sources/notify-rs-fsevent-rs.md)

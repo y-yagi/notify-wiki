@@ -1,8 +1,8 @@
 ---
 title: libuv (uv_fs_event_t)
 tags: [userspace-library, cross-platform, event-driven]
-updated: 2026-07-08
-sources: ["../sources/libuv-fs-event.md"]
+updated: 2026-07-09
+sources: ["../sources/libuv-fs-event.md", "../sources/libuv-fsevents-c.md"]
 ---
 
 # libuv (uv_fs_event_t)
@@ -18,11 +18,18 @@ having to know which native OS mechanism is doing the work underneath.
 
 - `uv_fs_event_init()` / `uv_fs_event_start(handle, cb, path, flags)` /
   `uv_fs_event_stop()` — standard libuv handle lifecycle.
-- The callback receives `(handle, filename, events, status)`. `filename` is
-  only populated on Linux and Windows ("Only non-null on Linux and Windows"
-  per the reference) — reflecting that inotify and ReadDirectoryChangesW both
-  report a changed filename within a watched directory, while other backends
-  (kqueue-based ones) don't give libuv one to pass through.
+- The callback receives `(handle, filename, events, status)`. **Correction
+  (2026-07-09): an earlier version of this page claimed `filename` is "only
+  non-null on Linux and Windows," attributed to the reference docs — that
+  exact phrasing doesn't appear in [libuv-fs-event](../sources/libuv-fs-event.md)
+  and was likely an over-generalization from the original ingest.** Per
+  [libuv-fsevents-c](../sources/libuv-fsevents-c.md) (the actual macOS
+  backend source), libuv unconditionally sets `kFSEventStreamCreateFlagFileEvents`
+  when creating its FSEvents stream and does pass a non-null relative-path
+  `filename` through to the callback on macOS too. `filename` is `NULL` only
+  when the backend genuinely can't determine a name (e.g. the documented
+  FreeBSD kqueue kernel bug, see Limitations) — not as a blanket macOS
+  limitation.
 - `events` is one of only two portable values: `UV_RENAME` or `UV_CHANGE` —
   every native backend's richer event vocabulary (inotify's `IN_*` bits,
   kqueue's `NOTE_*` filters, FSEvents' flags, ReadDirectoryChangesW's
@@ -54,18 +61,24 @@ having to know which native OS mechanism is doing the work underneath.
 ## Platform notes
 
 libuv picks "the best backend for the job on each platform" but the
-reference page doesn't enumerate the mapping itself — based on the
-behavior documented (recursive support on macOS/Windows only, filename
-population on Linux/Windows only), it lines up with [[inotify]] on Linux,
-some native mechanism on macOS (see [[fsevents]]), [[kqueue]] on
-BSDs, and [[readdirectorychangesw]] on Windows, plus AIX's `ahafs` and a
-z/OS-specific backend not covered elsewhere in this wiki.
+reference page doesn't enumerate the mapping itself. Confirmed directly via
+source ([libuv-fsevents-c](../sources/libuv-fsevents-c.md)): macOS 10.7+ uses
+[[fsevents]] (with `kFSEventStreamCreateFlagFileEvents` for per-file
+granularity), falling back to [[kqueue]] below 10.7 or on iOS, where the
+full FSEvents API isn't available. Based on documented recursive-watch
+support (macOS/Windows only), Windows lines up with
+[[readdirectorychangesw]] and Linux with [[inotify]]; other BSDs presumably
+use [[kqueue]] as well, plus AIX's `ahafs` and a z/OS-specific backend not
+covered elsewhere in this wiki — these three mappings aren't independently
+source-confirmed the way the macOS one now is.
 
 ## Related concepts
 
 - [[inotify]] — Linux backend; contributes the filename-in-callback behavior.
-- [[fsevents]] — macOS backend; contributes the recursive-watch support and
-  the pre-start-event-delivery quirk.
+- [[fsevents]] — macOS backend; contributes the recursive-watch support, the
+  pre-start-event-delivery quirk, and (via `kFSEventStreamCreateFlagFileEvents`,
+  confirmed in [libuv-fsevents-c](../sources/libuv-fsevents-c.md)) the
+  filename-in-callback behavior on macOS too, not just Linux/Windows.
 - [[kqueue]] — BSD backend; contributes the FreeBSD null-filename bug.
 - [[readdirectorychangesw]] — Windows backend; contributes filename-in-
   callback and recursive-watch support.
@@ -77,3 +90,4 @@ z/OS-specific backend not covered elsewhere in this wiki.
 ## Sources
 
 - [libuv-fs-event](../sources/libuv-fs-event.md)
+- [libuv-fsevents-c](../sources/libuv-fsevents-c.md)

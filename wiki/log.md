@@ -1,6 +1,43 @@
 # Change log
 
 ## 2026-07-09
+- Investigated whether other ingested userspace libraries support per-file
+  FSEvents granularity, following up on the libuv finding below. Ingested
+  `raw/watchman-fsevents-cpp.txt` (Watchman's `watchman/watcher/fsevents.cpp`,
+  `main` branch) and `raw/notify-rs-fsevent-rs.txt` (notify-rs's
+  `notify/src/fsevent.rs`, `main` branch), both fetched verbatim from GitHub.
+  Added `wiki/sources/watchman-fsevents-cpp.md` and
+  `wiki/sources/notify-rs-fsevent-rs.md`. Findings: **Watchman** sets
+  `kFSEventStreamCreateFlagFileEvents` conditionally on a config option,
+  `fsevents_watch_files`, which defaults to `true` — file-level granularity
+  out of the box, but toggleable (falls back to a `"dirfsevents"` watcher
+  when disabled). **notify-rs** sets the same flag unconditionally in its
+  FSEvents backend, with no config knob — but only applies when that backend
+  is selected over the alternative kqueue backend (a compile-time Cargo
+  feature choice). Updated `concepts/watchman.md` and `concepts/notify-rs.md`
+  with these findings (API/semantics + Related concepts + Sources).
+  Chokidar and fsnotify-go were not re-investigated at the source level:
+  Chokidar (v4+) rides entirely on libuv via Node's `fs.watch`, so the
+  existing libuv finding already covers it (documented as an inference, not
+  independently source-confirmed); fsnotify-go's own README already states
+  it doesn't use FSEvents on macOS at all (falls back to kqueue), so the
+  question doesn't apply to it.
+- Ingested `raw/libuv-fsevents-c.txt` (libuv's `src/unix/fsevents.c`, `v1.x`
+  branch, fetched verbatim from GitHub — investigating whether libuv's macOS
+  backend uses `kFSEventStreamCreateFlagFileEvents`). Added
+  `wiki/sources/libuv-fsevents-c.md`. **Found and corrected a contradiction**
+  in `concepts/libuv.md`: it previously claimed (added 2026-07-08, attributed
+  to the reference docs) that the `filename` callback argument is "only
+  non-null on Linux and Windows" — that exact phrase doesn't appear in
+  `libuv-fs-event.md`'s raw source either, and the actual macOS
+  implementation shows libuv unconditionally sets
+  `kFSEventStreamCreateFlagFileEvents` and does pass a populated relative-path
+  filename through on macOS. Corrected the API/semantics bullet in place
+  (flagged as a correction rather than silently rewritten), updated Platform
+  notes and Related concepts accordingly, and noted the source also
+  independently confirms the macOS 10.7 floor for FileEvents (libuv's own
+  `#if` guard falls back to kqueue below 10.7), cross-confirming
+  `apple-dev-fseventstreamcreateflagfileevents.md`'s availability claim.
 - Ingested `raw/apple-dev-fseventstreamcreateflagfileevents.txt` (Apple
   Developer Docs live page content for `kFSEventStreamCreateFlagFileEvents`
   — availability badges + Discussion text, pasted by the user since the page

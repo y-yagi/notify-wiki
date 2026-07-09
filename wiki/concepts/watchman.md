@@ -1,8 +1,8 @@
 ---
 title: Watchman
 tags: [userspace-library, cross-platform, event-driven]
-updated: 2026-07-08
-sources: ["../sources/watchman-cookies.md", "../sources/watchman-readme.md"]
+updated: 2026-07-09
+sources: ["../sources/watchman-cookies.md", "../sources/watchman-readme.md", "../sources/watchman-fsevents-cpp.md"]
 ---
 
 # Watchman
@@ -37,6 +37,13 @@ synchronized with the notification stream.
 - This depends on the underlying OS mechanism actually preserving order and
   reporting exactly what changed — which holds for [[inotify]] but is
   explicitly weaker on other platforms (see Limitations).
+- On macOS, Watchman requests per-file [[fsevents]] granularity
+  (`kFSEventStreamCreateFlagFileEvents`) **by default**, not just directory-
+  level changes — gated behind a config option, `fsevents_watch_files`, whose
+  default is `true`. Turning it off falls back to directory-level events (the
+  watcher's internal name switches from `"fsevents"` to `"dirfsevents"`) —
+  source-confirmed in
+  [watchman-fsevents-cpp](../sources/watchman-fsevents-cpp.md).
 
 ## Limitations & gotchas
 
@@ -68,7 +75,9 @@ watch mechanism ([[fen]]) is a documented gap elsewhere in this wiki.
 ## Related concepts
 
 - [[fsevents]] — the macOS backend whose lack of a synchronous-flush
-  guarantee is the specific, sourced limitation documented above.
+  guarantee is the specific, sourced limitation documented above; also the
+  source of the per-file granularity discussed above via
+  `kFSEventStreamCreateFlagFileEvents`.
 - [[inotify]] — the backend whose ordering guarantee the cookie mechanism
   depends on to work correctly.
 - [[chokidar]] / [[notify-rs]] / [[fsnotify-go]] — in-process libraries
@@ -80,3 +89,4 @@ watch mechanism ([[fen]]) is a documented gap elsewhere in this wiki.
 
 - [watchman-cookies](../sources/watchman-cookies.md)
 - [watchman-readme](../sources/watchman-readme.md)
+- [watchman-fsevents-cpp](../sources/watchman-fsevents-cpp.md)
