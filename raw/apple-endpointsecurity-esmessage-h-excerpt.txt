@@ -1,0 +1,578 @@
+Source: Apple EndpointSecurity framework — ESMessage.h (curated excerpt)
+URL: https://github.com/phracker/MacOSX-SDKs/blob/master/MacOSX11.3.sdk/usr/include/EndpointSecurity/ESMessage.h
+Fetched: 2026-07-09, via raw.githubusercontent.com (MacOSX11.3 SDK mirror)
+
+NOTE: This is a curated excerpt, not the full verbatim header (unlike this
+wiki's other raw/ header captures). ESMessage.h is 1401 lines covering every
+Endpoint Security event type (process exec/fork/exit, memory mapping,
+IOKit, signals, kext load, mount/unmount, etc.), most of which is out of
+scope for a file-change-notification wiki. This excerpt keeps only:
+  1. `es_file_t` and the file header/includes (original lines 1-40)
+  2. The file-I/O-related event structs (original lines 260-600):
+     es_event_unlink_t, es_event_link_t, es_event_rename_t,
+     es_event_setextattr_t/getextattr_t/deleteextattr_t,
+     es_event_setmode_t/setflags_t/setowner_t, es_event_close_t,
+     es_event_create_t, es_event_exchangedata_t, es_event_write_t
+  3. The `es_events_t` union and `es_message_t` top-level struct + doc
+     comment (original lines 1075-1245), showing how individual event
+     structs are delivered to a client
+Original line numbers are preserved in the `// original line N` markers
+below each section for traceability back to the full header if needed.
+
+// ===== original lines 1-40 (es_file_t + header) =====
+#ifndef __ENDPOINT_SECURITY_MESSAGE_H
+#define __ENDPOINT_SECURITY_MESSAGE_H
+
+#ifndef __ENDPOINT_SECURITY_INDIRECT__
+#error "Please #include <EndpointSecurity/EndpointSecurity.h> instead of this file directly."
+#endif /* __ENDPOINT_SECURITY_INDIRECT__ */
+
+#include <mach/message.h>
+#include <stdbool.h>
+#include <sys/acl.h>
+#include <sys/mount.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/xattr.h>
+#include <os/availability.h>
+#include <os/base.h>
+
+#if !__DARWIN_64_BIT_INO_T
+	#error This header requires __DARWIN_64_BIT_INO_T
+#endif /* !__DARWIN_64_BIT_INO_T */
+
+/**
+ * The EndpointSecurity subsystem is responsible for creating, populating and
+ * delivering these data structures to ES clients.
+ */
+
+/**
+ * @brief es_file_t provides the stat information and path to a file that relates to a security
+ * event. The path may be truncated, which is indicated by the path_truncated flag.
+ *
+ * @discussion Currently, path lengths are supported up to 16K in length (though this
+ * number is subject to change at any time and users must not rely on this value being
+ * constant). If a path is longer than the supported maximum length, it will be marked
+ * as truncated via the `path_truncated` member.
+ */
+typedef struct {
+	es_string_token_t path;
+	bool path_truncated;
+	struct stat stat;
+} es_file_t;
+
+// ===== original lines 260-600 (file I/O event structs) =====
+/**
+ * @brief Unlink a file system object
+ *
+ * @field target The object that will be removed
+ * @field parent_dir The parent directory of the `target` file system object
+ *
+ * @note This event can fire multiple times for a single syscall, for example when the syscall
+ *       has to be retried due to racing VFS operations.
+ */
+typedef struct {
+	es_file_t * _Nonnull target;
+	es_file_t * _Nonnull parent_dir;
+	uint8_t reserved[64];
+} es_event_unlink_t;
+
+/**
+ * @brief Memory map a file
+ *
+ * @field protection The protection (region accessibility) value
+ * @field max_protection The maximum allowed protection value the operating system will respect
+ * @field flags The type and attributes of the mapped file
+ * @field file_pos The offset into `source` that will be mapped
+ * @field source The file system object being mapped
+ */
+typedef struct {
+	int32_t protection;
+	int32_t max_protection;
+	int32_t flags;
+	uint64_t file_pos;
+	es_file_t * _Nonnull source;
+	uint8_t reserved[64];
+} es_event_mmap_t;
+
+/**
+ * @brief Link to a file
+ *
+ * @field source The existing object to which a hard link will be created
+ * @field target_dir The directory in which the link will be created
+ * @field target_filename The name of the new object linked to `source`
+ */
+typedef struct {
+	es_file_t * _Nonnull source;
+	es_file_t * _Nonnull target_dir;
+	es_string_token_t target_filename;
+	uint8_t reserved[64];
+} es_event_link_t;
+
+/**
+ * @brief Mount a file system
+ *
+ * @field statfs The file system stats for the file system being mounted
+ */
+typedef struct {
+	struct statfs * _Nonnull statfs;
+	uint8_t reserved[64];
+} es_event_mount_t;
+
+/**
+ * @brief Unmount a file system
+ *
+ * @field statfs The file system stats for the file system being unmounted
+ */
+typedef struct {
+	struct statfs * _Nonnull statfs;
+	uint8_t reserved[64];
+} es_event_unmount_t;
+
+/**
+ * @brief Remount a file system
+ *
+ * @field statfs The file system stats for the file system being remounted
+ */
+typedef struct {
+	struct statfs * _Nonnull statfs;
+	uint8_t reserved[64];
+} es_event_remount_t;
+
+/**
+ * @brief Fork a new process
+ *
+ * @field child The child process that was created
+ */
+typedef struct {
+	es_process_t * _Nonnull child;
+	uint8_t reserved[64];
+} es_event_fork_t;
+
+/**
+ * @brief Control protection of pages
+ *
+ * @field protection The desired new protection value
+ * @field address The base address to which the protection value will apply
+ * @field size The size of the memory region the protection value will apply
+ */
+typedef struct {
+	int32_t protection;
+	user_addr_t address;
+	user_size_t size;
+	uint8_t reserved[64];
+} es_event_mprotect_t;
+
+/**
+ * @brief Send a signal to a process
+ *
+ * @field sig The signal number to be delivered
+ * @field target The process that will receive the signal
+ *
+ * @note This event will not fire if a process sends a signal to itself.
+ */
+typedef struct {
+	int sig;
+	es_process_t * _Nonnull target;
+	uint8_t reserved[64];
+} es_event_signal_t;
+
+typedef enum {
+	ES_DESTINATION_TYPE_EXISTING_FILE,
+	ES_DESTINATION_TYPE_NEW_PATH,
+} es_destination_type_t;
+
+/**
+ * @brief Rename a file system object
+ *
+ * @field source The source file that is being renamed
+ * @field destination_type Whether or not the destination refers to an existing or new file
+ * @field destination Information about the destination of the renamed file (see note)
+ * @field existing_file The destination file that will be overwritten
+ * @field new_path Information regarding the destination of a newly created file
+ * @field dir The directory into which the file will be renamed
+ * @field filename The name of the new file that will be created
+ *
+ * @note The `destination_type` field describes which member in the `destination` union should
+ * accessed. `ES_DESTINATION_TYPE_EXISTING_FILE` means that `existing_file` should be used,
+ * `ES_DESTINATION_TYPE_NEW_PATH` means that the `new_path` struct should be used.
+ *
+ * @note This event can fire multiple times for a single syscall, for example when the syscall
+ *       has to be retried due to racing VFS operations.
+ */
+typedef struct {
+	es_file_t * _Nonnull source;
+	es_destination_type_t destination_type;
+	union {
+		es_file_t * _Nonnull existing_file;
+		struct {
+			es_file_t * _Nonnull dir;
+			es_string_token_t filename;
+		} new_path;
+	} destination;
+	uint8_t reserved[64];
+} es_event_rename_t;
+
+/**
+ * @brief Set an extended attribute
+ *
+ * @field target The file for which the extended attribute will be set
+ * @field extattr The extended attribute which will be set
+ */
+typedef struct {
+	es_file_t * _Nonnull target;
+	es_string_token_t extattr;
+	uint8_t reserved[64];
+} es_event_setextattr_t;
+
+/**
+ * @brief Retrieve an extended attribute
+ *
+ * @field target The file for which the extended attribute will be retrieved
+ * @field extattr The extended attribute which will be retrieved
+ */
+typedef struct {
+	es_file_t * _Nonnull target;
+	es_string_token_t extattr;
+	uint8_t reserved[64];
+} es_event_getextattr_t;
+
+/**
+ * @brief Delete an extended attribute
+ *
+ * @field target The file for which the extended attribute will be deleted
+ * @field extattr The extended attribute which will be deleted
+ */
+typedef struct {
+	es_file_t * _Nonnull target;
+	es_string_token_t extattr;
+	uint8_t reserved[64];
+} es_event_deleteextattr_t;
+
+/**
+ * @brief Modify file mode
+ *
+ * @field mode The desired new mode
+ * @field target The file for which mode information will be modified
+ *
+ * @note The `mode` member is the desired new mode. The `target`
+ * member's `stat` information contains the current mode.
+ */
+typedef struct {
+	mode_t mode;
+	es_file_t * _Nonnull target;
+	uint8_t reserved[64];
+} es_event_setmode_t;
+
+/**
+ * @brief Modify file flags information
+ *
+ * @field flags The desired new flags
+ * @field target The file for which flags information will be modified
+ *
+ * @note The `flags` member is the desired set of new flags. The `target`
+ * member's `stat` information contains the current set of flags.
+ */
+typedef struct {
+	uint32_t flags;
+	es_file_t * _Nonnull target;
+	uint8_t reserved[64];
+} es_event_setflags_t;
+
+/**
+ * @brief Modify file owner information
+ *
+ * @field uid The desired new UID
+ * @field gid The desired new GID
+ * @field target The file for which owner information will be modified
+ *
+ * @note The `uid` and `gid` members are the desired new values. The `target`
+ * member's `stat` information contains the current uid and gid values.
+ */
+typedef struct {
+	uid_t uid;
+	gid_t gid;
+	es_file_t * _Nonnull target;
+	uint8_t reserved[64];
+} es_event_setowner_t;
+
+/**
+ * @brief Close a file descriptor
+ *
+ * @field modified Set to TRUE if the target file being closed has been modified
+ * @field target The file that is being closed
+ */
+typedef struct {
+	bool modified;
+	es_file_t * _Nonnull target;
+	uint8_t reserved[64];
+} es_event_close_t;
+
+/**
+ * @brief Create a file system object
+ *
+ * @field destination_type Whether or not the destination refers to an existing file (see note)
+ * @field destination Information about the destination of the new file (see note)
+ * @field existing_file The file system object that was created
+ * @field dir The directory in which the new file system object will be created
+ * @field filename The name of the new file system object to create
+ * @field acl The ACL that the new file system object got or gets created with.
+ *        May be NULL if the file system object gets created without ACL.
+ *        @note The acl provided cannot be directly used by functions within
+ *        the <sys/acl.h> header. These functions can mutate the struct passed
+ *        into them, which is not compatible with the immutable nature of
+ *        es_message_t. Additionally, because this field is minimally constructed,
+ *        you must not use `acl_dup(3)` to get a mutable copy, as this can lead to
+ *        out of bounds memory access. To obtain a acl_t struct that is able to be
+ *        used with all functions within <sys/acl.h>, please use a combination of
+ *        `acl_copy_ext(3)` followed by `acl_copy_int(3)`.
+ *        Field available only if message version >= 2.
+ *
+ * @note If an object is being created but has not yet been created, the
+ * `destination_type` will be `ES_DESTINATION_TYPE_NEW_PATH`.
+ *
+ * @note Typically `ES_EVENT_TYPE_NOTIFY_CREATE` events are fired after the
+ * object has been created and the `destination_type` will be
+ * `ES_DESTINATION_TYPE_EXISTING_FILE`. The exception to this is for
+ * notifications that occur if an ES client responds to an
+ * `ES_EVENT_TYPE_AUTH_CREATE` event with `ES_AUTH_RESULT_DENY`.
+ *
+ * @note This event can fire multiple times for a single syscall, for example when the syscall
+ *       has to be retried due to racing VFS operations.
+ */
+typedef struct {
+	es_destination_type_t destination_type;
+	union {
+		es_file_t * _Nonnull existing_file;
+		struct {
+			es_file_t * _Nonnull dir;
+			es_string_token_t filename;
+			mode_t mode;
+		} new_path;
+	} destination;
+	uint8_t reserved2[16];
+	union {
+		uint8_t reserved[48];
+		struct {
+			acl_t _Nullable acl; /* field available only if message version >= 2 */
+		};
+	};
+} es_event_create_t;
+
+/**
+ * @brief Terminate a process
+ *
+ * @field stat The exit status of a process (same format as wait(2))
+ */
+typedef struct {
+	int stat;
+	uint8_t reserved[64];
+} es_event_exit_t;
+
+/**
+ * @brief Exchange data atomically between two files
+ *
+ * @field file1 The first file to be exchanged
+ * @field file2 The second file to be exchanged
+ */
+typedef struct {
+	es_file_t * _Nonnull file1;
+	es_file_t * _Nonnull file2;
+	uint8_t reserved[64];
+} es_event_exchangedata_t;
+
+/**
+ * @brief Write to a file
+ *
+ * @field target The file being written to
+ */
+typedef struct {
+	es_file_t * _Nonnull target;
+	uint8_t reserved[64];
+} es_event_write_t;
+
+/**
+ * @brief Truncate a file
+ *
+ * @field target The file that is being truncated
+ */
+typedef struct {
+	es_file_t * _Nonnull target;
+	uint8_t reserved[64];
+} es_event_truncate_t;
+
+/**
+ * @brief Change directories
+
+// ===== original lines 1075-1245 (es_events_t union + es_message_t) =====
+ * Union of all possible events that can appear in an es_message_t
+ */
+typedef union {
+	es_event_access_t access;
+	es_event_chdir_t chdir;
+	es_event_chroot_t chroot;
+	es_event_clone_t clone;
+	es_event_close_t close;
+	es_event_create_t create;
+	es_event_cs_invalidated_t cs_invalidated;
+	es_event_deleteextattr_t deleteextattr;
+	es_event_dup_t dup;
+	es_event_exchangedata_t exchangedata;
+	es_event_exec_t exec;
+	es_event_exit_t exit;
+	es_event_file_provider_materialize_t file_provider_materialize;
+	es_event_file_provider_update_t file_provider_update;
+	es_event_fcntl_t fcntl;
+	es_event_fork_t fork;
+	es_event_fsgetpath_t fsgetpath;
+	es_event_get_task_t get_task;
+	es_event_get_task_read_t get_task_read;
+	es_event_get_task_inspect_t get_task_inspect;
+	es_event_get_task_name_t get_task_name;
+	es_event_getattrlist_t getattrlist;
+	es_event_getextattr_t getextattr;
+	es_event_iokit_open_t iokit_open;
+	es_event_kextload_t kextload;
+	es_event_kextunload_t kextunload;
+	es_event_link_t link;
+	es_event_listextattr_t listextattr;
+	es_event_lookup_t lookup;
+	es_event_mmap_t mmap;
+	es_event_mount_t mount;
+	es_event_mprotect_t mprotect;
+	es_event_open_t open;
+	es_event_proc_check_t proc_check;
+	es_event_proc_suspend_resume_t proc_suspend_resume;
+	es_event_pty_close_t pty_close;
+	es_event_pty_grant_t pty_grant;
+	es_event_readdir_t readdir;
+	es_event_readlink_t readlink;
+	es_event_remote_thread_create_t remote_thread_create;
+	es_event_remount_t remount;
+	es_event_rename_t rename;
+	es_event_searchfs_t searchfs;
+	es_event_setacl_t setacl;
+	es_event_setattrlist_t setattrlist;
+	es_event_setextattr_t setextattr;
+	es_event_setflags_t setflags;
+	es_event_setmode_t setmode;
+	es_event_setowner_t setowner;
+	es_event_settime_t settime;
+	es_event_signal_t signal;
+	es_event_stat_t stat;
+	es_event_trace_t trace;
+	es_event_truncate_t truncate;
+	es_event_uipc_bind_t uipc_bind;
+	es_event_uipc_connect_t uipc_connect;
+	es_event_unlink_t unlink;
+	es_event_unmount_t unmount;
+	es_event_utimes_t utimes;
+	es_event_write_t write;
+} es_events_t;
+
+/**
+ * es_result_t indicates the result of the ES subsystem authorization process
+ * The result_type field indicates if the result is an es_auth_result_t or a uint32_t (flags)
+ */
+typedef struct {
+	es_result_type_t result_type;
+	union {
+		es_auth_result_t auth;
+		uint32_t flags;
+		uint8_t reserved[32];
+	} result;
+} es_result_t;
+
+/**
+ * @brief es_message_t is the top level datatype that encodes information sent
+ * from the ES subsystem to its clients.  Each security event being processed
+ * by the ES subsystem will be encoded in an es_message_t.  A message can be an
+ * authorization request or a notification of an event that has already taken
+ * place.
+ *
+ * @field version Indicates the message version; some fields are not available
+ *        and must not be accessed unless the message version is equal to or
+ *        higher than the message version at which the field was introduced.
+ * @field time The time at which the event was generated.
+ * @field mach_time The Mach absolute time at which the event was generated.
+ * @field deadline The Mach absolute time before which an auth event must
+ *        be responded to. If a client fails to respond to auth events prior to the `deadline`,
+ *        the client will be killed.
+ *        Each message can contain its own unique deadline, and some deadlines
+ *        can vary substantially. Clients must take care to inspect the deadline
+ *        value of each message to know how much time is allotted for processing.
+ * @field process Describes the process that took the action.
+ * @field seq_num Per-client, per-event-type sequence number that can be
+ *        inspected to detect whether the kernel had to drop events for this
+ *        client.  When no events are dropped for this client, seq_num
+ *        increments by 1 for every message of that event type.  When events
+ *        have been dropped, the difference between the last seen sequence
+ *        number of that event type plus 1 and seq_num of the received message
+ *        indicates the number of events that had to be dropped.
+ *        Dropped events generally indicate that more events were generated in
+ *        the kernel than the client was able to handle.
+ *        Field available only if message version >= 2.
+ *        @see global_seq_num
+ * @field action_type Indicates if the action field is an auth or notify action.
+ * @field action For auth events, contains the opaque auth ID that must be
+ *        supplied when responding to the event.  For notify events, describes
+ *        the result of the action.
+ * @field event_type Indicates which event struct is defined in the event union.
+ * @field event Contains data specific to the event type.
+ * @field thread Describes the thread that took the action.  May be NULL when
+ *        thread is not applicable, for example for trace events that describe
+ *        the traced process calling ptrace(PT_TRACE_ME) or for cs invalidated
+ *        events that are a result of another process calling
+ *        csops(CS_OPS_MARKINVALID).
+ *        Field available only if message version >= 4.
+ * @field global_seq_num Per-client sequence number that can be inspected to
+ *        detect whether the kernel had to drop events for this client. When no
+ *        events are dropped for this client, global_seq_num increments by 1 for
+ *        every message. When events have been dropped, the difference between
+ *        the last seen global sequence number and the global_seq_num of the
+ *        received message indicates the number of events that had to be dropped.
+ *        Dropped events generally indicate that more events were generated in
+ *        the kernel than the client was able to handle.
+ *        Field available only if message version >= 4.
+ *        @see seq_num
+ * @field opaque Opaque data that must not be accessed directly.
+ *
+ * @note For events that can be authorized there are unique NOTIFY and AUTH
+ * event types for the same event data, eg: event.exec is the correct union
+ * label for both ES_EVENT_TYPE_AUTH_EXEC and ES_EVENT_TYPE_NOTIFY_EXEC event
+ * types.
+ *
+ * @note For fields marked only available in specific message versions, all
+ * access must be guarded at runtime by checking the value of the message
+ * version field, e.g.
+ * ```
+ * if (msg->version >= 2) {
+ *     acl = msg->event.create.acl;
+ * }
+ * ```
+ *
+ * @note Fields using Mach time are in the resolution matching the ES client's
+ * architecture.  This means they can be compared to mach_absolute_time() and
+ * converted to nanoseconds with the help of mach_timebase_info().  Further
+ * note that on Apple silicon, x86_64 clients running under Rosetta 2 will see
+ * Mach times in a different resolution than native arm64 clients.  For more
+ * information on differences regarding Mach time on Apple silicon and Intel-based
+ * Mac computers, see "Addressing Architectural Differences in Your macOS Code":
+ * https://developer.apple.com/documentation/apple_silicon/addressing_architectural_differences_in_your_macos_code
+ */
+typedef struct {
+	uint32_t version;
+	struct timespec time;
+	uint64_t mach_time;
+	uint64_t deadline;
+	es_process_t * _Nonnull process;
+	uint64_t seq_num; /* field available only if message version >= 2 */
+	es_action_type_t action_type;
+	union {
+		es_event_id_t auth;
+		es_result_t notify;
+	} action;
+	es_event_type_t event_type;
+	es_events_t event;
+	es_thread_t * _Nullable thread; /* field available only if message version >= 4 */
+	uint64_t global_seq_num; /* field available only if message version >= 4 */

@@ -7,6 +7,7 @@ See `/CLAUDE.md` for how this wiki is organized and maintained.
 
 - [chokidar](concepts/chokidar.md)
 - [dnotify](concepts/dnotify.md)
+- [endpoint-security](concepts/endpoint-security.md)
 - [fanotify](concepts/fanotify.md)
 - [findfirstchangenotification](concepts/findfirstchangenotification.md)
 - [fsevents](concepts/fsevents.md)
@@ -21,11 +22,13 @@ See `/CLAUDE.md` for how this wiki is organized and maintained.
 - [watchman](concepts/watchman.md)
 
 Expected coverage: `inotify`, `fanotify`, `dnotify`, `kqueue`/`kevent`,
-`FSEvents`, `ReadDirectoryChangesW` — all present. Userspace libraries built
-on top of these (`libuv`, `watchman`, `chokidar`, `notify-rs`, Go's
-`fsnotify`) are now covered too. Remaining known gap: Solaris/illumos FEN
-(`port_create`/`port_get`), referenced from `fsnotify-go.md` and
-`watchman.md` but with no dedicated concept page yet.
+`FSEvents`, `ReadDirectoryChangesW`, Endpoint Security — all present.
+Userspace libraries built on top of these (`libuv`, `watchman`, `chokidar`,
+`notify-rs`, Go's `fsnotify`) are now covered too. Remaining known gaps:
+Solaris/illumos FEN (`port_create`/`port_get`), referenced from
+`fsnotify-go.md` and `watchman.md` but with no dedicated concept page yet;
+io_uring-based watching, mentioned only in `CLAUDE.md`'s scope, never in
+`wiki/` body text.
 
 ## Comparisons
 
@@ -49,6 +52,9 @@ on top of these (`libuv`, `watchman`, `chokidar`, `notify-rs`, Go's
 - [chokidar-readme](sources/chokidar-readme.md) — Chokidar README
 - [notify-rs-readme](sources/notify-rs-readme.md) — notify-rs README
 - [fsnotify-go-readme](sources/fsnotify-go-readme.md) — fsnotify (Go) README
+- [apple-endpointsecurity-esclient-h](sources/apple-endpointsecurity-esclient-h.md) — EndpointSecurity ESClient.h (Apple SDK header, mirrored)
+- [apple-endpointsecurity-estypes-h](sources/apple-endpointsecurity-estypes-h.md) — EndpointSecurity ESTypes.h (Apple SDK header, mirrored)
+- [apple-endpointsecurity-esmessage-h-excerpt](sources/apple-endpointsecurity-esmessage-h-excerpt.md) — EndpointSecurity ESMessage.h, curated excerpt (Apple SDK header, mirrored)
 
 ## Log
 

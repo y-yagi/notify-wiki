@@ -1,6 +1,32 @@
 # Change log
 
 ## 2026-07-09
+- Added `concepts/endpoint-security.md`, a new concept page, resolving the
+  "unwritten-but-mentioned concept" gap flagged in the 2026-07-08 health
+  check and again in a `/lint` run today (both `fsevents.md` and
+  `watchman.md` already mentioned Endpoint Security as Apple's suggested
+  fix for FSEvents' flush-guarantee gap, but neither linked to a real page).
+  Ingested three Apple `EndpointSecurity.framework` headers mirrored via
+  `phracker/MacOSX-SDKs` (`MacOSX11.3.sdk`): `raw/apple-endpointsecurity-esclient-h.txt`
+  (client lifecycle API, full verbatim), `raw/apple-endpointsecurity-estypes-h.txt`
+  (event type enum, full verbatim), and
+  `raw/apple-endpointsecurity-esmessage-h-excerpt.txt` (event payload
+  structs — a **curated excerpt**, not verbatim, since the full header is
+  1401 lines covering mostly non-file event types out of this wiki's scope;
+  the raw file's own header comment documents exactly what was kept). Added
+  matching `wiki/sources/*.md` for all three. New page covers: the
+  AUTH/NOTIFY event split and real-time response deadline for AUTH events,
+  the entitlement + Full Disk Access barrier to entry (much higher than any
+  other mechanism here), structured create/rename event payloads (no
+  FROM/TO cookie-pairing needed unlike inotify), quantified drop-detection
+  via sequence numbers (vs. FSEvents/inotify's binary drop flags), and
+  built-in kernel-level event muting. Cross-linked from `concepts/fsevents.md`
+  and `concepts/watchman.md`'s existing Endpoint Security mentions (now
+  `[[endpoint-security]]` links) and their Related concepts sections.
+  Updated `wiki/index.md`: added to Concepts list, updated "Expected
+  coverage" note (also folded in the still-open io_uring gap, previously
+  only mentioned in the 2026-07-08 log entry), and added the three new
+  sources to the Sources list.
 - Investigated whether other ingested userspace libraries support per-file
   FSEvents granularity, following up on the libuv finding below. Ingested
   `raw/watchman-fsevents-cpp.txt` (Watchman's `watchman/watcher/fsevents.cpp`,

@@ -53,8 +53,10 @@ synchronized with the notification stream.
   observed arriving *after* both the cookie notification and the flush call
   returned — i.e. FSEvents offers no synchronous-flush guarantee despite the
   API's name. Apple's own suggested fix is to reimplement watching on
-  Endpoint Security instead; Watchman's fallback is a `settle_period`/
-  `settle_timeout` quiescence heuristic rather than a hard guarantee.
+  [[endpoint-security]] instead; Watchman's fallback is a `settle_period`/
+  `settle_timeout` quiescence heuristic rather than a hard guarantee. No
+  source in this wiki documents Watchman actually having adopted Endpoint
+  Security.
 - On any platform where the OS only reports "something in this directory
   changed" without saying what changed (unlike Linux inotify, which reports
   the specific child), cookie detection can miss if not every intervening
@@ -78,6 +80,9 @@ watch mechanism ([[fen]]) is a documented gap elsewhere in this wiki.
   guarantee is the specific, sourced limitation documented above; also the
   source of the per-file granularity discussed above via
   `kFSEventStreamCreateFlagFileEvents`.
+- [[endpoint-security]] — Apple's suggested replacement for the FSEvents
+  flush-guarantee gap; not confirmed as actually adopted by Watchman in any
+  source this wiki has ingested.
 - [[inotify]] — the backend whose ordering guarantee the cookie mechanism
   depends on to work correctly.
 - [[chokidar]] / [[notify-rs]] / [[fsnotify-go]] — in-process libraries

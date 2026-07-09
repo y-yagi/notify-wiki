@@ -121,8 +121,10 @@ event ID N (possibly days ago, possibly before I was even running)?"
   cookie-file notification and a `FSEventStreamFlushSync` call had already
   returned — i.e. the API's own documented flush primitive can lie about
   having flushed everything. Apple's suggested replacement is to build a
-  watcher on Endpoint Security instead; there is no documented fix within
-  the FSEvents API itself.
+  watcher on [[endpoint-security]] instead, whose AUTH-time events and
+  quantified drop-detection are a direct answer to this gap (at the cost of
+  needing a security entitlement + Full Disk Access); there is no documented
+  fix within the FSEvents API itself.
 
 ## Platform notes
 
@@ -159,6 +161,10 @@ event ID N (possibly days ago, possibly before I was even running)?"
 - `[[watchman]]` — a real-world consumer whose query-synchronization design
   documents FSEvents' synchronous-flush limitation from production
   experience, not just the API reference.
+- [[endpoint-security]] — Apple's suggested replacement for FSEvents in
+  security-sensitive contexts, per Watchman's own notes; solves a different
+  problem primarily (security monitoring/authorization) but covers file
+  events too, without FSEvents' flush-guarantee gap.
 - [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
 
 ## Sources
