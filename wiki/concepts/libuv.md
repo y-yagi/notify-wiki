@@ -85,6 +85,10 @@ source-confirmed the way the macOS one now is.
 - [[chokidar]] — a comparable "smooth over native event differences"
   library, but for Node's `fs.watch`/`fs.watchFile` rather than libuv
   directly (Node's `fs.watch` is itself built on libuv's `uv_fs_event_t`).
+- [[listen]] — the same "hide the native mechanism behind one callback
+  shape" goal in Ruby, but achieved by delegating to separate per-platform
+  gems (`rb-inotify`, `rb-fsevent`, `rb-kqueue`, `wdm`) rather than one
+  shared C library implementing every backend itself.
 - [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
 
 ## Sources

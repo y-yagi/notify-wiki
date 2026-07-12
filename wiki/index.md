@@ -17,6 +17,7 @@ See `/CLAUDE.md` for how this wiki is organized and maintained.
 - [io_uring](concepts/io_uring.md)
 - [kqueue](concepts/kqueue.md)
 - [libuv](concepts/libuv.md)
+- [listen](concepts/listen.md)
 - [notify-rs](concepts/notify-rs.md)
 - [readdirectorychangesw](concepts/readdirectorychangesw.md)
 - [usn-journal](concepts/usn-journal.md)
@@ -25,7 +26,7 @@ See `/CLAUDE.md` for how this wiki is organized and maintained.
 Expected coverage: `inotify`, `fanotify`, `dnotify`, `kqueue`/`kevent`,
 `FSEvents`, `ReadDirectoryChangesW`, Endpoint Security — all present.
 Userspace libraries built on top of these (`libuv`, `watchman`, `chokidar`,
-`notify-rs`, Go's `fsnotify`) are now covered too. `io_uring` is now covered as a general async I/O facility. The only concrete
+`notify-rs`, Go's `fsnotify`, Ruby's `listen`) are now covered too. `io_uring` is now covered as a general async I/O facility. The only concrete
 link found to `inotify`/`fanotify` is a throwaway LKML mention of them as
 candidates for io_uring's fixed-file table (fd-table placement, not event
 delivery) — see `concepts/io_uring.md`. Whether io_uring is ever actually used
@@ -62,6 +63,7 @@ Solaris/illumos FEN (`port_create`/`port_get`), referenced from
 - [apple-endpointsecurity-esclient-h](sources/apple-endpointsecurity-esclient-h.md) — EndpointSecurity ESClient.h (Apple SDK header, mirrored)
 - [apple-endpointsecurity-estypes-h](sources/apple-endpointsecurity-estypes-h.md) — EndpointSecurity ESTypes.h (Apple SDK header, mirrored)
 - [apple-endpointsecurity-esmessage-h-excerpt](sources/apple-endpointsecurity-esmessage-h-excerpt.md) — EndpointSecurity ESMessage.h, curated excerpt (Apple SDK header, mirrored)
+- [listen-readme](sources/listen-readme.md) — Listen (Ruby gem) README
 
 ## Log
 

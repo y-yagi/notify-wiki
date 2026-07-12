@@ -1,6 +1,17 @@
 # Change log
 
 ## 2026-07-12
+- Fetched `github.com/guard/listen`'s README (requested directly as a URL
+  rather than a file already dropped in `raw/`) and saved it as
+  `raw/listen-readme.md`. Added `wiki/sources/listen-readme.md` and the
+  new `wiki/concepts/listen.md` page for the Ruby `listen` gem (`guard`'s
+  file-watching engine): auto-selects a native adapter per platform
+  (`rb-inotify`/`rb-fsevent`/`rb-kqueue`/`wdm`, wrapping [[inotify]],
+  [[fsevents]], [[kqueue]], and (unconfirmed) [[readdirectorychangesw]]
+  respectively) with a polling fallback. Added a `listen` row (marked "not
+  documented in our source") to `comparisons/recursive-watching.md`, and
+  cross-linked it back in as a comparable library from `concepts/libuv.md`,
+  `concepts/chokidar.md`, and `concepts/watchman.md`.
 - Fetched `man7.org/linux/man-pages/man7/io_uring.7.html` (with user
   confirmation, since it arrived as a URL rather than a file already dropped
   in `raw/`) and saved it as `raw/man7-io_uring.7.txt`. Added

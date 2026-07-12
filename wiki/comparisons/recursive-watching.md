@@ -40,6 +40,7 @@ answers, not just yes/no:
 | [[chokidar]] | Yes | README states recursive watching is always supported (with a `depth` option to limit it), regardless of backend. |
 | [[notify-rs]] | Not documented in our source | The notify-rs README doesn't state a recursive-watch default either way — worth checking `docs.rs` directly before relying on this. |
 | [[fsnotify-go]] | No | README states recursive watching is "on the roadmap," not shipped; each subdirectory needs its own explicit `Add()` call. |
+| [[listen]] | Not documented in our source | README doesn't state a recursive-watch model either way; unclear whether it's inherited per-adapter (e.g. free on Darwin/Windows the way [[libuv]] gets it) or built by `listen` itself in userspace. |
 
 ## Takeaways
 
@@ -63,7 +64,8 @@ answers, not just yes/no:
   native primitive (implied for [[chokidar]] on Linux, where the underlying
   `fs.watch`/inotify has none — not explicitly documented in its README, but
   the only way the claim is consistent with [[inotify]]'s own limitations).
-- Two entries above are marked "not documented in our source" rather than a
+- Three entries above are marked "not documented in our source" rather than a
   guessed yes/no — resolving them would mean ingesting docs.rs's notify-rs
-  API reference and Watchman's watch-establishment code/docs, not just the
-  README and cookies.md we have today.
+  API reference, Watchman's watch-establishment code/docs, and listen's
+  adapter source (or the `rb-inotify`/`rb-fsevent`/`rb-kqueue`/`wdm` gems it
+  wraps), not just the READMEs and cookies.md we have today.

@@ -67,6 +67,9 @@ Chokidar layers its `add`/`change`/`unlink` naming on top of).
 - [[fsnotify-go]] — also cited by notify-rs as a sibling inspiration;
   narrower in scope (no built-in debounce/atomic-write handling, unlike
   Chokidar).
+- [[listen]] — Ruby's equivalent in spirit (one callback over several native
+  backends, plus a polling fallback), but wraps separate per-platform gems
+  rather than one shared library like libuv underneath Chokidar.
 - [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
 
 ## Sources
