@@ -1,5 +1,37 @@
 # Change log
 
+## 2026-07-12
+- Fetched `man7.org/linux/man-pages/man7/io_uring.7.html` (with user
+  confirmation, since it arrived as a URL rather than a file already dropped
+  in `raw/`) and saved it as `raw/man7-io_uring.7.txt`. Added
+  `wiki/sources/man7-io_uring-7.md` and the new `wiki/concepts/io_uring.md`
+  page, resolving the "io_uring-based watching" gap noted in `wiki/index.md`
+  since 2026-07-08/09 — partially. The man page describes io_uring's general
+  async I/O submission/completion-queue model (SQE/CQE, `io_uring_enter(2)`,
+  SQPOLL) but **does not mention file-change notification, inotify, or
+  fanotify at all**; it's a foundational source, not a description of
+  "io_uring-based watching" specifically. Noted this explicitly in both the
+  source and concept page, and added a tentative (unconfirmed) cross-link
+  from `concepts/inotify.md` — async reads of an inotify fd via io_uring
+  seems plausible but isn't described in any ingested source yet. Updated
+  `wiki/index.md`'s Concepts and Sources lists and reworded the "Expected
+  coverage" gap note accordingly.
+- Researched (via web search, at the user's request) whether any LKML archive
+  discusses inotify/io_uring integration. Found a real but minor hit: a
+  three-message August 2021 side-thread within "open/accept directly into
+  io_uring fixed file table" review, where Josh Triplett lists `inotify` and
+  `fanotify` among sixteen candidate syscalls for io_uring's "fixed file
+  table" mechanism (fd-table placement, not event delivery), and io_uring
+  maintainer Pavel Begunkov calls the generalization "speculations." No
+  patch or design proposal resulted. Fetched the three messages from the
+  lkml.iu.edu hypermail mirror, saved as
+  `raw/lkml-io_uring-fixed-file-inotify-fanotify.txt`, and added
+  `wiki/sources/lkml-io_uring-fixed-file-inotify-fanotify.md`. Updated
+  `wiki/concepts/io_uring.md` (Overview and Related concepts) with this
+  finding and `wiki/index.md`'s Sources list and "Expected coverage" note.
+  Still no source confirms io_uring being used to *read or deliver* file
+  change notifications — only this tangential fd-table-placement mention.
+
 ## 2026-07-10
 - Added `wiki/comparisons/kqueue-vs-fsevents.md`, a new comparisons page
   (requested after a `/query` on the same question) doing an axis-by-axis

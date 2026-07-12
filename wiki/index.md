@@ -14,6 +14,7 @@ See `/CLAUDE.md` for how this wiki is organized and maintained.
 - [fsnotify](concepts/fsnotify.md)
 - [fsnotify-go](concepts/fsnotify-go.md)
 - [inotify](concepts/inotify.md)
+- [io_uring](concepts/io_uring.md)
 - [kqueue](concepts/kqueue.md)
 - [libuv](concepts/libuv.md)
 - [notify-rs](concepts/notify-rs.md)
@@ -24,11 +25,14 @@ See `/CLAUDE.md` for how this wiki is organized and maintained.
 Expected coverage: `inotify`, `fanotify`, `dnotify`, `kqueue`/`kevent`,
 `FSEvents`, `ReadDirectoryChangesW`, Endpoint Security — all present.
 Userspace libraries built on top of these (`libuv`, `watchman`, `chokidar`,
-`notify-rs`, Go's `fsnotify`) are now covered too. Remaining known gaps:
+`notify-rs`, Go's `fsnotify`) are now covered too. `io_uring` is now covered as a general async I/O facility. The only concrete
+link found to `inotify`/`fanotify` is a throwaway LKML mention of them as
+candidates for io_uring's fixed-file table (fd-table placement, not event
+delivery) — see `concepts/io_uring.md`. Whether io_uring is ever actually used
+to watch for file changes remains unconfirmed by any ingested source.
+Remaining known gap:
 Solaris/illumos FEN (`port_create`/`port_get`), referenced from
-`fsnotify-go.md` and `watchman.md` but with no dedicated concept page yet;
-io_uring-based watching, mentioned only in `CLAUDE.md`'s scope, never in
-`wiki/` body text.
+`fsnotify-go.md` and `watchman.md` but with no dedicated concept page yet.
 
 ## Comparisons
 
@@ -42,6 +46,8 @@ io_uring-based watching, mentioned only in `CLAUDE.md`'s scope, never in
 - [msdn-findfirstchangenotificationa](sources/msdn-findfirstchangenotificationa.md) — FindFirstChangeNotificationA function (Microsoft Learn)
 - [man7-fanotify-7](sources/man7-fanotify-7.md) — fanotify(7) man page (man7.org)
 - [man7-inotify-7](sources/man7-inotify-7.md) — inotify(7) man page (man7.org)
+- [man7-io_uring-7](sources/man7-io_uring-7.md) — io_uring(7) man page (man7.org / liburing project)
+- [lkml-io_uring-fixed-file-inotify-fanotify](sources/lkml-io_uring-fixed-file-inotify-fanotify.md) — LKML thread mentioning inotify/fanotify as io_uring fixed-file-table candidates (2021)
 - [msdn-fsutil-usn](sources/msdn-fsutil-usn.md) — fsutil usn command reference (Microsoft Learn)
 - [msdn-readdirectorychangesw](sources/msdn-readdirectorychangesw.md) — ReadDirectoryChangesW function (Microsoft Learn)
 - [openbsd-kqueue-2](sources/openbsd-kqueue-2.md) — kqueue(2) man page (man.openbsd.org)

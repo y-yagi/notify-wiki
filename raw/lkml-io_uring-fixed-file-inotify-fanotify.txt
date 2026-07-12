@@ -1,0 +1,408 @@
+Thread: Re: [PATCH v2 0/4] open/accept directly into io_uring fixed file table
+Mailing list: linux-kernel (also io-uring, netdev)
+Archived at: lkml.iu.edu hypermail mirror, folder linux/kernel/2108.1/
+Fetched: 2026-07-12
+
+This thread is a tangential side-discussion within a patch review of
+'open/accept directly into io_uring fixed file table' (Aug 2021). It is
+included here because one message lists inotify and fanotify among
+candidate syscalls for a generalized io_uring 'fixed file table'
+mechanism. It is NOT about async reading of inotify/fanotify events via
+io_uring -- see the final message's summary judgment on this.
+
+============================================================
+Message 1/3
+URL: https://lkml.iu.edu/hypermail/linux/kernel/2108.1/07437.html
+============================================================
+Re: [PATCH v2 0/4] open/accept directly into io_uring fixed file table
+
+From: Josh Triplett
+Date: Sat Aug 14 2021 - 23:31:23 EST
+
+- Next message: Matthew Wilcox: "Re: [PATCH v14 071/138] mm/writeback:
+  Add filemap_dirty_folio()"
+- Previous message: Barry Song: "Re: [driver-core:driver-core-testing
+  28/31] WARNING: modpost: vmlinux.o(.text.unlikely+0x156c): Section
+
+On Sat, Aug 14, 2021 at 01:50:24PM +0100, Pavel Begunkov wrote:
+> On 8/13/21 8:00 PM, Josh Triplett wrote:
+> > Rather than using sqe->file_index - 1, which feels like an
+error-prone
+> > interface, I think it makes sense to use a dedicated flag for this,
+like
+> > IOSQE_OPEN_FIXED. That flag could work for any open-like operation,
+> > including open, accept, and in the future many other operations such
+as
+> > memfd_create. (Imagine using a single ring submission to open a
+memfd,
+> > write a buffer into it, seal it, send it over a UNIX socket, and
+then
+> > close it.)
+> >
+> > The only downside is that you'll need to reject that flag in all
+> > non-open operations. One way to unify that code might be to add a
+flag
+> > in io_op_def for open-like operations, and then check in common code
+for
+> > the case of non-open-like operations passing IOSQE_OPEN_FIXED.
+>
+> io_uring is really thin, and so I absolutely don't want any extra
+> overhead in the generic path, IOW anything affecting
+> reads/writes/sends/recvs.
+There are already several checks for valid flags in io_init_req. For
+instance:
+if ((sqe_flags & IOSQE_BUFFER_SELECT) &&
+!io_op_defs[req->opcode].buffer_select)
+return -EOPNOTSUPP;
+It'd be trivial to make io_op_defs have a "valid flags" byte, and one
+bitwise op tells you if any invalid flags were passed. *Zero* additional
+overhead for other operations.
+Alternatively, since there are so few operations that open a file
+descriptor, you could just add a separate opcode for those few
+operations. That still seems preferable to overloading a 16-bit index
+field for this.
+With this new mechanism, I think we're going to want to support more
+than 65535 fixed-file entries. I can easily imagine wanting to handle
+hundreds of thousands of files or sockets this way.
+> The other reason is that there are only 2 bits left in sqe->flags,
+> and we may use them for something better, considering that it's
+> only open/accept and not much as this.
+pipe, dup3, socket, socketpair, pidfds (via either pidfd_open or a
+ring-based spawn mechanism), epoll_create, inotify, fanotify, signalfd,
+timerfd, eventfd, memfd_create, userfaultfd, open_tree, fsopen, fsmount,
+memfd_secret.
+Of those, I personally would *love* to have at least pipe, socket,
+pidfd, memfd_create, and fsopen/fsmount/open_tree, plus some manner of
+dup-like operation for moving things between the fixed-file table and
+file descriptors.
+I think this is valuable and versatile enough to merit a flag. It would
+also be entirely reasonable to create separate operations for these. But
+either way, I don't think this should just be determined by whether a
+16-bit index is non-zero.
+> I agree that it feels error-prone, but at least it can be wrapped
+> nicely enough in liburing, e.g.
+>
+> void io_uring_prep_openat_direct(struct io_uring_sqe *sqe, int dfd,
+> const char *path, int flags,
+> mode_t mode, int slot_idx);
+That wrapper wouldn't be able to handle more than a 16-bit slot index
+though.
+> > Also, rather than using a 16-bit index for the fixed file table and
+> > potentially requiring expansion into a different field in the
+future,
+> > what about overlapping it with the nofile field in the open and
+accept
+> > requests? If they're not opening a normal file descriptor, they
+don't
+> > need nofile. And in the original sqe, you can then overlap it with a
+> > 32-bit field like splice_fd_in.
+>
+> There is no nofile in SQEs, though
+>
+> req->open.nofile = rlimit(RLIMIT_NOFILE);
+nofile isn't needed for opening into the fixed-file table, so it could
+be omitted in that case, and another field unioned with it. That would
+allow passing a 32-bit fixed-file index into open and accept without
+growing the size of their structures. I think, with this new capability,
+we're going to want a large number of fixed files available.
+In the SQE, you could overlap it with the splice_fd_in field, which
+isn't needed by any calls other than splice.
+- Josh Triplett
+
+
+============================================================
+Message 2/3
+URL: https://lkml.iu.edu/hypermail/linux/kernel/2108.1/07528.html
+============================================================
+Re: [PATCH v2 0/4] open/accept directly into io_uring fixed file table
+
+From: Pavel Begunkov
+Date: Sun Aug 15 2021 - 06:49:39 EST
+
+- Next message: Matthew Wilcox: "Re: [PATCH v14 072/138] mm/writeback:
+  Add folio_account_cleaned()"
+- Previous message: Pali Rohár: "[PATCH 2/3] PCI: aardvark: Fix masking
+  MSI interrupts"
+
+On 8/15/21 4:31 AM, Josh Triplett wrote:
+> On Sat, Aug 14, 2021 at 01:50:24PM +0100, Pavel Begunkov wrote:
+>> On 8/13/21 8:00 PM, Josh Triplett wrote:
+>>> Rather than using sqe->file_index - 1, which feels like an
+error-prone
+>>> interface, I think it makes sense to use a dedicated flag for this,
+like
+>>> IOSQE_OPEN_FIXED. That flag could work for any open-like operation,
+>>> including open, accept, and in the future many other operations such
+as
+>>> memfd_create. (Imagine using a single ring submission to open a
+memfd,
+>>> write a buffer into it, seal it, send it over a UNIX socket, and
+then
+>>> close it.)
+>>>
+>>> The only downside is that you'll need to reject that flag in all
+>>> non-open operations. One way to unify that code might be to add a
+flag
+>>> in io_op_def for open-like operations, and then check in common code
+for
+>>> the case of non-open-like operations passing IOSQE_OPEN_FIXED.
+>>
+>> io_uring is really thin, and so I absolutely don't want any extra
+>> overhead in the generic path, IOW anything affecting
+>> reads/writes/sends/recvs.
+>
+> There are already several checks for valid flags in io_init_req. For
+> instance:
+Yes, it's horrible and I don't want to make it any worse.
+> if ((sqe_flags & IOSQE_BUFFER_SELECT) &&
+> !io_op_defs[req->opcode].buffer_select)
+> return -EOPNOTSUPP;
+> It'd be trivial to make io_op_defs have a "valid flags" byte, and one
+> bitwise op tells you if any invalid flags were passed. *Zero*
+additional
+> overhead for other operations.
+Good point
+> Alternatively, since there are so few operations that open a file
+> descriptor, you could just add a separate opcode for those few
+> operations. That still seems preferable to overloading a 16-bit index
+> field for this.
+I don't think so
+> With this new mechanism, I think we're going to want to support more
+> than 65535 fixed-file entries. I can easily imagine wanting to handle
+> hundreds of thousands of files or sockets this way.
+May be. What I'm curious about is that the feature doesn't really
+change anything in this regard, but seems I haven't heard people
+asking for larger tables.
+>> The other reason is that there are only 2 bits left in sqe->flags,
+>> and we may use them for something better, considering that it's
+>> only open/accept and not much as this.
+>
+> pipe, dup3, socket, socketpair, pidfds (via either pidfd_open or a
+> ring-based spawn mechanism), epoll_create, inotify, fanotify,
+signalfd,
+> timerfd, eventfd, memfd_create, userfaultfd, open_tree, fsopen,
+fsmount,
+> memfd_secret.
+We could argue for many of those whether they should be in io_uring,
+and whether there are many benefits having them async and so. It would
+have another story if all the ecosystem was io_uring centric, but
+that's speculations.
+> Of those, I personally would *love* to have at least pipe, socket,
+> pidfd, memfd_create, and fsopen/fsmount/open_tree, plus some manner of
+> dup-like operation for moving things between the fixed-file table and
+> file descriptors.
+>
+> I think this is valuable and versatile enough to merit a flag. It
+would
+> also be entirely reasonable to create separate operations for these.
+But
+> either way, I don't think this should just be determined by whether a
+> 16-bit index is non-zero.
+>
+>> I agree that it feels error-prone, but at least it can be wrapped
+>> nicely enough in liburing, e.g.
+>>
+>> void io_uring_prep_openat_direct(struct io_uring_sqe *sqe, int dfd,
+>> const char *path, int flags,
+>> mode_t mode, int slot_idx);
+>
+> That wrapper wouldn't be able to handle more than a 16-bit slot index
+> though.
+It would. Note, the index is "int" there, so if doesn't fit
+into u16, we can fail it. And do conversion if required.
+>>> Also, rather than using a 16-bit index for the fixed file table and
+>>> potentially requiring expansion into a different field in the
+future,
+>>> what about overlapping it with the nofile field in the open and
+accept
+>>> requests? If they're not opening a normal file descriptor, they
+don't
+>>> need nofile. And in the original sqe, you can then overlap it with a
+>>> 32-bit field like splice_fd_in.
+>>
+>> There is no nofile in SQEs, though
+>>
+>> req->open.nofile = rlimit(RLIMIT_NOFILE);
+>
+> nofile isn't needed for opening into the fixed-file table, so it could
+> be omitted in that case, and another field unioned with it.
+There is no problem to place it internally. Moreover, it's at the
+moment uniformly placed inside io_kiocb, but with nofile we'd need
+to find the place on per-op basis.
+Not like any matters, it's just bike shedding.
+> allow passing a 32-bit fixed-file index into open and accept without
+> growing the size of their structures. I think, with this new
+capability,
+> we're going to want a large number of fixed files available.
+>
+> In the SQE, you could overlap it with the splice_fd_in field, which
+> isn't needed by any calls other than splice.
+But it doesn't mean it won't be used, as happened with pretty every
+other field in SQE. So, it rather depends on what packing is wanted.
+And reusing almost never used ->buf_index (and potentially ->ioprio),
+sounds reasonable.
+--
+Pavel Begunkov
+
+
+============================================================
+Message 3/3
+URL: https://lkml.iu.edu/hypermail/linux/kernel/2108.1/07581.html
+============================================================
+Re: [PATCH v2 0/4] open/accept directly into io_uring fixed file table
+
+From: Pavel Begunkov
+Date: Sun Aug 15 2021 - 10:24:17 EST
+
+- Next message: kernel test robot: "[tip:irq/urgent] BUILD SUCCESS
+  7a3dc4f35bf8e1a07e5c3f8ecc8ac923f48493fe"
+- Previous message: Amir Goldstein: "Re: [PATCH v4 5/5] virtiofs:
+  propagate sync() to file server"
+
+On 8/15/21 11:48 AM, Pavel Begunkov wrote:
+> On 8/15/21 4:31 AM, Josh Triplett wrote:
+>> On Sat, Aug 14, 2021 at 01:50:24PM +0100, Pavel Begunkov wrote:
+>>> On 8/13/21 8:00 PM, Josh Triplett wrote:
+>>>> Rather than using sqe->file_index - 1, which feels like an
+error-prone
+>>>> interface, I think it makes sense to use a dedicated flag for this,
+like
+>>>> IOSQE_OPEN_FIXED. That flag could work for any open-like operation,
+>>>> including open, accept, and in the future many other operations
+such as
+>>>> memfd_create. (Imagine using a single ring submission to open a
+memfd,
+>>>> write a buffer into it, seal it, send it over a UNIX socket, and
+then
+>>>> close it.)
+>>>>
+>>>> The only downside is that you'll need to reject that flag in all
+>>>> non-open operations. One way to unify that code might be to add a
+flag
+>>>> in io_op_def for open-like operations, and then check in common
+code for
+>>>> the case of non-open-like operations passing IOSQE_OPEN_FIXED.
+>>>
+>>> io_uring is really thin, and so I absolutely don't want any extra
+>>> overhead in the generic path, IOW anything affecting
+>>> reads/writes/sends/recvs.
+>>
+>> There are already several checks for valid flags in io_init_req. For
+>> instance:
+>
+> Yes, it's horrible and I don't want to make it any worse.
+>
+>> if ((sqe_flags & IOSQE_BUFFER_SELECT) &&
+>> !io_op_defs[req->opcode].buffer_select)
+>> return -EOPNOTSUPP;
+>> It'd be trivial to make io_op_defs have a "valid flags" byte, and one
+>> bitwise op tells you if any invalid flags were passed. *Zero*
+additional
+>> overhead for other operations.
+>
+> Good point
+>
+>> Alternatively, since there are so few operations that open a file
+>> descriptor, you could just add a separate opcode for those few
+>> operations. That still seems preferable to overloading a 16-bit index
+>> field for this.
+>
+> I don't think so
+>
+>> With this new mechanism, I think we're going to want to support more
+>> than 65535 fixed-file entries. I can easily imagine wanting to handle
+>> hundreds of thousands of files or sockets this way.
+>
+> May be. What I'm curious about is that the feature doesn't really
+> change anything in this regard, but seems I haven't heard people
+> asking for larger tables.
+>
+>>> The other reason is that there are only 2 bits left in sqe->flags,
+>>> and we may use them for something better, considering that it's
+>>> only open/accept and not much as this.
+>>
+>> pipe, dup3, socket, socketpair, pidfds (via either pidfd_open or a
+>> ring-based spawn mechanism), epoll_create, inotify, fanotify,
+signalfd,
+>> timerfd, eventfd, memfd_create, userfaultfd, open_tree, fsopen,
+fsmount,
+>> memfd_secret.
+>
+> We could argue for many of those whether they should be in io_uring,
+> and whether there are many benefits having them async and so. It would
+> have another story if all the ecosystem was io_uring centric, but
+> that's speculations.
+>
+>> Of those, I personally would *love* to have at least pipe, socket,
+>> pidfd, memfd_create, and fsopen/fsmount/open_tree, plus some manner
+of
+>> dup-like operation for moving things between the fixed-file table and
+>> file descriptors.
+>>
+>> I think this is valuable and versatile enough to merit a flag. It
+would
+>> also be entirely reasonable to create separate operations for these.
+But
+>> either way, I don't think this should just be determined by whether a
+>> 16-bit index is non-zero.
+>>
+>>> I agree that it feels error-prone, but at least it can be wrapped
+>>> nicely enough in liburing, e.g.
+>>>
+>>> void io_uring_prep_openat_direct(struct io_uring_sqe *sqe, int dfd,
+>>> const char *path, int flags,
+>>> mode_t mode, int slot_idx);
+>>
+>> That wrapper wouldn't be able to handle more than a 16-bit slot index
+>> though.
+>
+> It would. Note, the index is "int" there, so if doesn't fit
+> into u16, we can fail it. And do conversion if required.
+>
+>>>> Also, rather than using a 16-bit index for the fixed file table and
+>>>> potentially requiring expansion into a different field in the
+future,
+>>>> what about overlapping it with the nofile field in the open and
+accept
+>>>> requests? If they're not opening a normal file descriptor, they
+don't
+>>>> need nofile. And in the original sqe, you can then overlap it with
+a
+>>>> 32-bit field like splice_fd_in.
+>>>
+>>> There is no nofile in SQEs, though
+>>>
+>>> req->open.nofile = rlimit(RLIMIT_NOFILE);
+>>
+>> nofile isn't needed for opening into the fixed-file table, so it
+could
+>> be omitted in that case, and another field unioned with it.
+>
+> There is no problem to place it internally. Moreover, it's at the
+> moment uniformly placed inside io_kiocb, but with nofile we'd need
+> to find the place on per-op basis.
+>
+> Not like any matters, it's just bike shedding.
+>
+>> allow passing a 32-bit fixed-file index into open and accept without
+>> growing the size of their structures. I think, with this new
+capability,
+>> we're going to want a large number of fixed files available.
+>>
+>> In the SQE, you could overlap it with the splice_fd_in field, which
+>> isn't needed by any calls other than splice.
+>
+> But it doesn't mean it won't be used, as happened with pretty every
+> other field in SQE. So, it rather depends on what packing is wanted.
+> And reusing almost never used ->buf_index (and potentially ->ioprio),
+> sounds reasonable.
+Aliasing with ->splice_fd_in looks better indeed (apart from it
+inherently not being checked, but meh?), But I still don't think
+it's a good option to use sqe->flags, and so still needs some way
+to switch between modes.
+Can be sqe->rw_flags as once was done with SPLICE_F_FD_IN_FIXED,
+but it's IMHO an ugly hackish way. I still lean to the
+0 vs >0 encoding .
+--
+Pavel Begunkov
+

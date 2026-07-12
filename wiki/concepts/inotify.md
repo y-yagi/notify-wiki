@@ -1,7 +1,7 @@
 ---
 title: inotify
 tags: [linux, kernel, event-driven]
-updated: 2026-07-09
+updated: 2026-07-12
 sources: ["../sources/man7-inotify-7.md", "../sources/lwn-fsnotify-unified-backend.md", "../sources/quora-love-inotify-recursive.md"]
 ---
 
@@ -184,6 +184,9 @@ Read-only flags (only ever appear in the returned mask, never settable):
   buffer/fd the app reads, with similar full-rescan-on-overflow requirements.
 - `[[fsnotify]]` — the shared in-kernel backend inotify has been implemented
   on top of since Linux 2.6.31.
+- `[[io_uring]]` — general Linux async I/O facility; conceivably usable to
+  read an inotify fd asynchronously instead of blocking on `read(2)`, but no
+  ingested source confirms this usage.
 - [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
 
 ## Sources
