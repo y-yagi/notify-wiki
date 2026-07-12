@@ -1,6 +1,19 @@
 # Change log
 
 ## 2026-07-12
+- Fetched Jonathan Lemon's original kqueue design paper ("Kqueue: A generic
+  and scalable event notification facility," FREENIX Track, 2001 USENIX
+  ATC — commonly mis-cited as "USENIX 2000," which is actually when kqueue
+  shipped in FreeBSD 4.1) and saved it as
+  `raw/lemon-kqueue-freenix2001.pdf`. Added `wiki/sources/lemon-kqueue-freenix2001.md`
+  and updated `wiki/concepts/kqueue.md` with the paper's design goals
+  (scalability vs poll/select, level-triggered + coalesced events,
+  library-safety), the original (smaller) filter/VNODE-action set, a more
+  precise fork()/`vfork(RFFDG)` nuance, and confirmation that — unlike
+  inotify's Quora-sourced design rationale — no source in this wiki,
+  including kqueue's own design paper, explains why `EVFILT_VNODE` has no
+  recursive/tree-wide primitive. Flagged as a genuine documentation gap, not
+  a contradiction.
 - Fetched `github.com/guard/listen`'s README (requested directly as a URL
   rather than a file already dropped in `raw/`) and saved it as
   `raw/listen-readme.md`. Added `wiki/sources/listen-readme.md` and the

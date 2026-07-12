@@ -52,6 +52,7 @@ Solaris/illumos FEN (`port_create`/`port_get`), referenced from
 - [msdn-fsutil-usn](sources/msdn-fsutil-usn.md) — fsutil usn command reference (Microsoft Learn)
 - [msdn-readdirectorychangesw](sources/msdn-readdirectorychangesw.md) — ReadDirectoryChangesW function (Microsoft Learn)
 - [openbsd-kqueue-2](sources/openbsd-kqueue-2.md) — kqueue(2) man page (man.openbsd.org)
+- [lemon-kqueue-freenix2001](sources/lemon-kqueue-freenix2001.md) — Jonathan Lemon's original kqueue design paper (FREENIX 2001)
 - [lwn-fsnotify-unified-backend](sources/lwn-fsnotify-unified-backend.md) — fsnotify unified backend patch mail (LWN.net archive)
 - [lwn-fanotify-api](sources/lwn-fanotify-api.md) — "The fanotify API" (LWN.net)
 - [libuv-fs-event](sources/libuv-fs-event.md) — libuv `uv_fs_event_t` API docs
