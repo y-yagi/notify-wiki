@@ -1,0 +1,65 @@
+Source: Microsoft Learn (Windows Driver Kit DDI reference)
+URL: https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/ni-ntifs-fsctl_query_usn_journal
+Title: FSCTL_QUERY_USN_JOURNAL (ntifs.h)
+Page last updated: 2025-02-14 (per ms.date metadata)
+Fetched: 2026-07-19
+
+---
+
+# FSCTL_QUERY_USN_JOURNAL - Windows drivers | Microsoft Learn
+
+The FSCTL_QUERY_USN_JOURNAL control code queries for information on the
+current update sequence number (USN) change journal, its records, and its
+capacity. See Remarks.
+
+### Major code
+
+FSCTL_QUERY_USN_JOURNAL
+
+## Remarks
+
+To perform this operation, call FltFsControlFile or ZwFsControlFile with
+the following parameters.
+
+- FileObject [in]: Parameter for FltFsControlFile only. A file object
+  pointer for the remote volume. This parameter is required and can't be
+  NULL.
+- FileHandle [in]: Parameter for ZwFsControlFile only. A handle for the
+  remote volume. This parameter is required and can't be NULL.
+- FsControlCode [in]: A control code for the operation. Use
+  FSCTL_QUERY_USN_JOURNAL for this operation.
+- InputBuffer [in]: Not used.
+- InputBufferLength [in]: Not used.
+- OutputBuffer [out]: Pointer to a USN_JOURNAL_DATA structure that
+  receives the information about the change journal.
+- OutputBufferLength [in]: Size in bytes of the buffer at OutputBuffer.
+
+## Return value
+
+FltFsControlFile or ZwFsControlFile returns STATUS_SUCCESS if the
+operation succeeds. Otherwise, the appropriate function returns the
+appropriate NTSTATUS error code.
+
+## Requirements
+
+  Requirement                 Value
+  ---------------------------  --------
+  Minimum supported client    Windows XP
+  Header                      ntifs.h
+
+## Notes on scope (fetched-page characteristics)
+
+- This is a Windows Driver Kit (WDK) DDI reference page (`ntifs.h`,
+  `wdk-api-reference` service), not a Win32 user-mode API reference. The
+  two invocation paths documented (FltFsControlFile, ZwFsControlFile) are
+  both kernel-mode APIs: FltFsControlFile is called from within a
+  minifilter driver; ZwFsControlFile is the kernel-mode native API
+  counterpart of the user-mode DeviceIoControl call that a typical
+  application would use to reach FSCTL_QUERY_USN_JOURNAL indirectly.
+- The page does not mention any privilege/administrator-rights
+  requirement anywhere in its text.
+- The page does not detail the USN_JOURNAL_DATA structure's fields —
+  it only states that OutputBuffer receives a pointer to one.
+- No remarks about the FAT/exFAT/ReFS support boundary, no version
+  history beyond the single "Minimum supported client: Windows XP" line,
+  no server minimum version given.

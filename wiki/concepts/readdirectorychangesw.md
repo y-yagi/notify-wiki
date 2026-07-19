@@ -1,8 +1,8 @@
 ---
 title: ReadDirectoryChangesW
 tags: [windows, win32, event-driven]
-updated: 2026-07-08
-sources: ["../sources/msdn-readdirectorychangesw.md"]
+updated: 2026-07-19
+sources: ["../sources/msdn-readdirectorychangesw.md", "../sources/msdn-readdirectorychangesexw.md", "../sources/oldnewthing-readdirectorychangesw-deletion-details.md"]
 ---
 
 # ReadDirectoryChangesW
@@ -76,6 +76,17 @@ whenever an application needs to know what happened.
   for such targets.
 - Directory-or-subtree granularity only, same as `FindFirstChangeNotification`
   — no true per-file watch mode.
+- **No details on a deleted item** — a `FILE_ACTION_REMOVED` record gives
+  only the name; by the time it arrives the item is already gone, so its
+  attributes (file vs. directory, size) can't be recovered with
+  `GetFileAttributesEx`. The expected workaround is to maintain an
+  in-memory cache (seeded via `FindFirstFile`/`FindNextFile`, updated on
+  `FILE_ACTION_ADDED`) and resolve removals against that cache — but this
+  has its own race: if an item is created and deleted fast enough that the
+  cache-update code hasn't yet queried its attributes, the information is
+  simply unavailable. `[[readdirectorychangesexw]]`, called with
+  `ReadDirectoryNotifyExtendedInformation`, closes this gap by attaching
+  file attributes and size to removal records directly.
 
 ## Platform notes
 
@@ -89,6 +100,11 @@ whenever an application needs to know what happened.
 
 ## Related concepts
 
+- `[[readdirectorychangesexw]]` — newer sibling (Windows 10 1709+ /
+  Server 2019+, NTFS-only per its own docs) that adds a selectable output
+  format (`FILE_NOTIFY_INFORMATION` or the richer
+  `FILE_NOTIFY_EXTENDED_INFORMATION`) via an extra parameter; otherwise
+  identical parameters and semantics to this API.
 - `[[findfirstchangenotification]]` — the coarser, presence-only sibling API;
   this is what Microsoft's own docs direct you to instead when you need
   actual change details.
@@ -103,7 +119,12 @@ whenever an application needs to know what happened.
   docs point to for whole-volume tracking; unlike this live per-directory
   handle, the journal survives app restarts and covers the whole volume.
 - [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
+- [[windows-notification-apis]] — history and feature-by-feature
+  comparison across all four Windows notification APIs, with a current
+  recommendation.
 
 ## Sources
 
 - [msdn-readdirectorychangesw](../sources/msdn-readdirectorychangesw.md)
+- [msdn-readdirectorychangesexw](../sources/msdn-readdirectorychangesexw.md)
+- [oldnewthing-readdirectorychangesw-deletion-details](../sources/oldnewthing-readdirectorychangesw-deletion-details.md)

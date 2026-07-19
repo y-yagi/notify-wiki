@@ -1,0 +1,55 @@
+Source: The Old New Thing (Microsoft DevBlogs)
+URL: https://devblogs.microsoft.com/oldnewthing/?p=112116
+Title: When ReadDirectoryChangesW reports that a deletion occurred, how can I learn more about the deleted thing?
+Author: Raymond Chen
+Publication date: March 6th, 2026
+Fetched: 2026-07-19
+
+---
+
+The post addresses a reader question about a common limitation developers
+hit when using the ReadDirectoryChangesW Windows API to monitor a
+directory for changes.
+
+The problem: A customer using this API to watch for file system changes
+found that when they received a FILE_ACTION_REMOVED notification, they
+had no way to determine details about the deleted item -- specifically
+whether it was "a file or a subdirectory," and if a file, its size --
+since by the time the deletion is reported, the item is already gone and
+cannot be queried with GetFileAttributesEx.
+
+Core explanation: Chen states plainly that ReadDirectoryChangesW itself
+"provides no way to recover information about the item that was
+deleted," giving the caller only the item's name. He explains the
+intended usage pattern: applications are expected to build an in-memory
+cache via FindFirstFile/FindNextFile, then use the API for incremental
+updates, querying attributes on FILE_ACTION_ADDED events to populate the
+cache, so that later FILE_ACTION_REMOVED events can be resolved by
+looking up the cached data rather than querying the (now-missing) file.
+
+The race condition caveat: He notes a timing flaw in this workaround --
+if an item is created and deleted in quick succession before the
+cache-update code runs GetFileAttributes, "it won't be there," leaving
+the program unable to determine what the item originally was.
+
+The solution: Chen points to the newer ReadDirectoryChangesExW function.
+When called with the ReadDirectoryNotifyExtendedInformation option, it
+returns FILE_NOTIFY_EXTENDED_INFORMATION structures that include
+directory metadata (including file attributes and size) alongside each
+add *and* remove event, eliminating the race condition entirely.
+
+Comments (selected discussion):
+
+- Several early comments joke about the capitalization/naming convention
+  of ReadDirectoryChangesW, with one commenter clarifying the "W" suffix
+  denotes "Unicode/Wide" versions of Windows APIs versus ANSI ("A")
+  variants.
+- Igor Levicki raises a separate long-standing complaint that Windows
+  still lacks a "file close notification," arguing this forces
+  developers to poll to know when a written file is finished being
+  created, and criticizes the cost/complexity of filesystem filter
+  drivers as a workaround.
+- Harry Johnston counters that the NTFS change journal does record close
+  operations, prompting further back-and-forth about permission
+  requirements (e.g., needing admin rights for FSCTL_QUERY_USN_JOURNAL)
+  and filesystem-specific limitations (e.g., ExFAT lacking a journal).

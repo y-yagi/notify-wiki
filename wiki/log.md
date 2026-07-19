@@ -1,5 +1,70 @@
 # Change log
 
+## 2026-07-19
+- Added `wiki/comparisons/windows-notification-apis.md`: history, timeline,
+  and axis-by-axis feature comparison of all four Windows notification
+  APIs (`FindFirstChangeNotification`, `ReadDirectoryChangesW`,
+  `ReadDirectoryChangesExW`, USN change journal), with a current-usage
+  recommendation. Synthesized entirely from existing `wiki/concepts/*.md`
+  content (no new sources fetched). Cross-linked from all four concept
+  pages and added to `wiki/index.md`'s Comparisons section.
+- Fetched the MSDN reference page for `ReadDirectoryChangesExW` and saved it
+  as `raw/msdn-readdirectorychangesexw.txt`. Added
+  `wiki/sources/msdn-readdirectorychangesexw.md` and a new
+  `wiki/concepts/readdirectorychangesexw.md` (Windows 10 1709+/Server 2019+,
+  adds a selectable `FILE_NOTIFY_INFORMATION`/`FILE_NOTIFY_EXTENDED_INFORMATION`
+  output format via a new parameter, otherwise identical to
+  `ReadDirectoryChangesW`; source states NTFS-only support, unlike
+  `ReadDirectoryChangesW`'s documented SMB/CsvFS/ReFS support). Cross-linked
+  from `concepts/readdirectorychangesw.md` and added to `wiki/index.md`.
+- Fetched Raymond Chen's "The Old New Thing" post on `ReadDirectoryChangesW`
+  deletion details and saved it as
+  `raw/oldnewthing-readdirectorychangesw-deletion-details.txt`. Added
+  `wiki/sources/oldnewthing-readdirectorychangesw-deletion-details.md`.
+  Updated `concepts/readdirectorychangesw.md` (deleted-item info gap +
+  cache/race-condition workaround), `concepts/readdirectorychangesexw.md`
+  (confirms `FILE_NOTIFY_EXTENDED_INFORMATION` carries attributes/size on
+  both add and remove events, closing the gap), and
+  `concepts/usn-journal.md` (added note, flagged lower-confidence since
+  sourced from blog comments, that `FSCTL_QUERY_USN_JOURNAL` may require
+  admin rights). Added source to `wiki/index.md`.
+- Fetched the WDK DDI reference page for `FSCTL_QUERY_USN_JOURNAL` and
+  saved it as `raw/msdn-fsctl-query-usn-journal.txt`. Added
+  `wiki/sources/msdn-fsctl-query-usn-journal.md`. Updated
+  `concepts/usn-journal.md`: this page documents the control code's
+  **kernel-mode** invocation (`FltFsControlFile`/`ZwFsControlFile`), not
+  the user-mode `DeviceIoControl` path, and does not mention any
+  privilege requirement — it neither confirms nor refutes the earlier
+  admin-rights claim from blog comments, so that claim remains flagged as
+  unconfirmed (likely scope mismatch between kernel-mode and user-mode
+  invocation, not a contradiction). Added source to `wiki/index.md`.
+- Fetched 4 more Microsoft Learn pages on the USN change journal (search-
+  derived, user-approved): the Win32/`winioctl.h` counterpart of
+  `FSCTL_QUERY_USN_JOURNAL`, "Using the Change Journal Identifier",
+  "Walking a Buffer of Change Journal Records", and the Win32
+  `FSCTL_READ_USN_JOURNAL` reference. Saved as `raw/msdn-fsctl-query-usn-
+  journal-win32.txt`, `raw/msdn-using-the-change-journal-identifier.txt`,
+  `raw/msdn-walking-a-buffer-of-change-journal-records.txt`,
+  `raw/msdn-fsctl-read-usn-journal.txt`, with matching `wiki/sources/*.md`
+  pages. Updated `concepts/usn-journal.md`:
+  - **Admin-rights requirement is now CONFIRMED** ("Using the Change
+    Journal Identifier": *"you must have system administrator
+    privileges... a member of the Administrators group"*), resolving the
+    previously-unconfirmed flag from the earlier entry above.
+  - Added the user-mode `DeviceIoControl`/`CreateFile` invocation pattern,
+    `FSCTL_READ_USN_JOURNAL` vs `FSCTL_ENUM_USN_DATA` distinction, and
+    `USN_RECORD_V2`/`V3` buffer-walk structure (variable-length records,
+    `RecordLength`, `FileName`/`FileNameLength` with no guaranteed null
+    terminator, max-record-size formula).
+  - Added SMB/CsvFS support tables for both `FSCTL_QUERY_USN_JOURNAL` and
+    `FSCTL_READ_USN_JOURNAL`.
+  - **Flagged, not resolved**: "Walking a Buffer..." states the target
+    volume "must be ReFS or NTFS 3.0 or later," in tension with the
+    existing "NTFS-specific — not available on FAT/exFAT/ReFS" Platform
+    notes claim sourced from `fsutil usn` docs. Left as an open
+    discrepancy in both the Limitations and Platform notes sections.
+  Added all 4 sources to `wiki/index.md`.
+
 ## 2026-07-12
 - Fetched Jonathan Lemon's original kqueue design paper ("Kqueue: A generic
   and scalable event notification facility," FREENIX Track, 2001 USENIX

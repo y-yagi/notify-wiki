@@ -1,0 +1,67 @@
+Source: Microsoft Learn (Win32 apps SDK API reference)
+URL: https://learn.microsoft.com/en-us/windows/win32/api/winioctl/ni-winioctl-fsctl_read_usn_journal
+Title: FSCTL_READ_USN_JOURNAL (winioctl.h)
+Page last updated: 2024-06-26 (per updated_at metadata; ms.date 2018-12-05)
+Fetched: 2026-07-19
+
+---
+
+# FSCTL_READ_USN_JOURNAL - Win32 apps | Microsoft Learn
+
+Retrieves the set of update sequence number (USN) change journal records
+between two specified USN values.
+
+    BOOL
+    WINAPI
+    DeviceIoControl( (HANDLE)       hDevice,         // handle to volume
+                     (DWORD) FSCTL_READ_USN_JOURNAL, // dwIoControlCode
+                     (LPVOID)       lpInBuffer,      // input buffer
+                     (DWORD)        nInBufferSize,   // size of input buffer
+                     (LPVOID)       lpOutBuffer,     // output buffer
+                     (DWORD)        nOutBufferSize,  // size of output buffer
+                     (LPDWORD)      lpBytesReturned, // number of bytes returned
+                     (LPOVERLAPPED) lpOverlapped );  // OVERLAPPED structure
+
+## Remarks
+
+For the implications of overlapped I/O on this operation, see the
+Remarks section of the DeviceIoControl topic.
+
+There are two DeviceIoControl control codes that return USN records,
+FSCTL_READ_USN_JOURNAL and FSCTL_ENUM_USN_DATA. Use the latter when you
+want a listing (enumeration) of the USN records between two USNs. Use
+the former when you want to select by USN.
+
+For more information, see Creating, Modifying, and Deleting a Change
+Journal.
+
+To retrieve a handle to a volume, call CreateFile with the lpFileName
+parameter set to a string in the following form:
+
+\\.\X:
+
+In the preceding string, X is the letter identifying the drive on which
+the volume appears. The volume must be NTFS.
+
+In Windows 8 and Windows Server 2012, this code is supported by the
+following technologies.
+
+  Technology                                  Supported
+  Server Message Block (SMB) 3.0 protocol     No
+  SMB 3.0 Transparent Failover (TFO)          No
+  SMB 3.0 with Scale-out File Shares (SO)     No
+  Cluster Shared Volume File System (CsvFS)   See comment
+
+An application may experience false positives on CsvFs pause/resume.
+
+#### Examples
+
+For an example, see Walking a Buffer of Change Journal Records.
+
+## Requirements
+
+  Requirement                Value
+  --------------------------  ------------------------------------------
+  Minimum supported client   Windows XP [desktop apps only]
+  Minimum supported server   Windows Server 2003 [desktop apps only]
+  Header                     winioctl.h (include Windows.h)

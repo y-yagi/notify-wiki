@@ -88,6 +88,9 @@ provides a separate, more detailed API: [[readdirectorychangesw]].
   per-directory or per-file), but inotify's `read()` event stream reports
   the specific change type and, where applicable, the affected filename —
   a level of detail this API lacks entirely.
+- [[windows-notification-apis]] — history and feature-by-feature
+  comparison across all four Windows notification APIs, with a current
+  recommendation.
 
 ## Sources
 

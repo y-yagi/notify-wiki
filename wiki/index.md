@@ -19,6 +19,7 @@ See `/CLAUDE.md` for how this wiki is organized and maintained.
 - [libuv](concepts/libuv.md)
 - [listen](concepts/listen.md)
 - [notify-rs](concepts/notify-rs.md)
+- [readdirectorychangesexw](concepts/readdirectorychangesexw.md)
 - [readdirectorychangesw](concepts/readdirectorychangesw.md)
 - [usn-journal](concepts/usn-journal.md)
 - [watchman](concepts/watchman.md)
@@ -39,6 +40,7 @@ Solaris/illumos FEN (`port_create`/`port_get`), referenced from
 
 - [recursive-watching](comparisons/recursive-watching.md) — which mechanisms/libraries support watching a directory tree natively vs. requiring the caller to walk and register every subdirectory itself
 - [kqueue-vs-fsevents](comparisons/kqueue-vs-fsevents.md) — axis-by-axis comparison of Darwin's two native file-watching mechanisms: granularity, timing, persistence, drop-detection, and where each has a real gap relative to the other
+- [windows-notification-apis](comparisons/windows-notification-apis.md) — history and feature-by-feature comparison of Windows's four notification APIs (FindFirstChangeNotification, ReadDirectoryChangesW, ReadDirectoryChangesExW, USN journal), with a current recommendation
 
 ## Sources
 
@@ -51,6 +53,13 @@ Solaris/illumos FEN (`port_create`/`port_get`), referenced from
 - [lkml-io_uring-fixed-file-inotify-fanotify](sources/lkml-io_uring-fixed-file-inotify-fanotify.md) — LKML thread mentioning inotify/fanotify as io_uring fixed-file-table candidates (2021)
 - [msdn-fsutil-usn](sources/msdn-fsutil-usn.md) — fsutil usn command reference (Microsoft Learn)
 - [msdn-readdirectorychangesw](sources/msdn-readdirectorychangesw.md) — ReadDirectoryChangesW function (Microsoft Learn)
+- [msdn-readdirectorychangesexw](sources/msdn-readdirectorychangesexw.md) — ReadDirectoryChangesExW function (Microsoft Learn)
+- [oldnewthing-readdirectorychangesw-deletion-details](sources/oldnewthing-readdirectorychangesw-deletion-details.md) — When ReadDirectoryChangesW reports a deletion, how can I learn more about the deleted thing? (The Old New Thing)
+- [msdn-fsctl-query-usn-journal](sources/msdn-fsctl-query-usn-journal.md) — FSCTL_QUERY_USN_JOURNAL (Windows Driver Kit DDI reference)
+- [msdn-fsctl-query-usn-journal-win32](sources/msdn-fsctl-query-usn-journal-win32.md) — FSCTL_QUERY_USN_JOURNAL (Win32 apps SDK reference)
+- [msdn-using-the-change-journal-identifier](sources/msdn-using-the-change-journal-identifier.md) — Using the Change Journal Identifier (Microsoft Learn)
+- [msdn-walking-a-buffer-of-change-journal-records](sources/msdn-walking-a-buffer-of-change-journal-records.md) — Walking a Buffer of Change Journal Records (Microsoft Learn)
+- [msdn-fsctl-read-usn-journal](sources/msdn-fsctl-read-usn-journal.md) — FSCTL_READ_USN_JOURNAL (Win32 apps SDK reference)
 - [openbsd-kqueue-2](sources/openbsd-kqueue-2.md) — kqueue(2) man page (man.openbsd.org)
 - [lemon-kqueue-freenix2001](sources/lemon-kqueue-freenix2001.md) — Jonathan Lemon's original kqueue design paper (FREENIX 2001)
 - [lwn-fsnotify-unified-backend](sources/lwn-fsnotify-unified-backend.md) — fsnotify unified backend patch mail (LWN.net archive)

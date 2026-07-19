@@ -1,0 +1,271 @@
+ReadDirectoryChangesExW function (winbase.h)
+
+Retrieves information that describes the changes within the specified
+directory. The function does not report changes to the specified
+directory itself.
+
+Syntax
+
+    BOOL ReadDirectoryChangesExW(
+      [in]                HANDLE                                hDirectory,
+      [out]               LPVOID                                lpBuffer,
+      [in]                DWORD                                 nBufferLength,
+      [in]                BOOL                                  bWatchSubtree,
+      [in]                DWORD                                 dwNotifyFilter,
+      [out, optional]     LPDWORD                               lpBytesReturned,
+      [in, out, optional] LPOVERLAPPED                          lpOverlapped,
+      [in, optional]      LPOVERLAPPED_COMPLETION_ROUTINE       lpCompletionRoutine,
+      [in]                READ_DIRECTORY_NOTIFY_INFORMATION_CLASS ReadDirectoryNotifyInformationClass
+    );
+
+Parameters
+
+[in] hDirectory
+
+A handle to the directory to be monitored. This directory must be opened
+with the FILE_LIST_DIRECTORY access right, or an access right such as
+GENERIC_READ that includes the FILE_LIST_DIRECTORY access right.
+
+[out] lpBuffer
+
+A pointer to the DWORD-aligned formatted buffer in which
+ReadDirectoryChangesExW should return the read results. The structure of
+this buffer is defined by the FILE_NOTIFY_EXTENDED_INFORMATION structure
+if the value of the ReadDirectoryNotifyInformationClass parameter is
+ReadDirectoryNotifyExtendedInformation, or by the FILE_NOTIFY_INFORMATION
+structure if ReadDirectoryNotifyInformationClass is
+ReadDirectoryNotifyInformation.
+
+This buffer is filled either synchronously or asynchronously, depending
+on how the directory is opened and what value is given to the
+lpOverlapped parameter. For more information, see the Remarks section.
+
+[in] nBufferLength
+
+The size of the buffer to which the lpBuffer parameter points, in bytes.
+
+[in] bWatchSubtree
+
+If this parameter is TRUE, the function monitors the directory tree
+rooted at the specified directory. If this parameter is FALSE, the
+function monitors only the directory specified by the hDirectory
+parameter.
+
+[in] dwNotifyFilter
+
+The filter criteria that the function checks to determine if the wait
+operation has completed. This parameter can be one or more of the
+following values.
+
+  ----------------------------------- -----------------------------------
+  Value                               Meaning
+
+  FILE_NOTIFY_CHANGE_FILE_NAME        Any file name change in the watched
+                                      directory or subtree causes a
+  0x00000001                          change notification wait operation
+                                      to return. Changes include
+                                      renaming, creating, or deleting a
+                                      file.
+
+  FILE_NOTIFY_CHANGE_DIR_NAME         Any directory-name change in the
+                                      watched directory or subtree causes
+  0x00000002                          a change notification wait
+                                      operation to return. Changes
+                                      include creating or deleting a
+                                      directory.
+
+  FILE_NOTIFY_CHANGE_ATTRIBUTES       Any attribute change in the watched
+                                      directory or subtree causes a
+  0x00000004                          change notification wait operation
+                                      to return.
+
+  FILE_NOTIFY_CHANGE_SIZE             Any file-size change in the watched
+                                      directory or subtree causes a
+  0x00000008                          change notification wait operation
+                                      to return. The operating system
+                                      detects a change in file size only
+                                      when the file is written to the
+                                      disk. For operating systems that
+                                      use extensive caching, detection
+                                      occurs only when the cache is
+                                      sufficiently flushed.
+
+  FILE_NOTIFY_CHANGE_LAST_WRITE       Any change to the last write-time
+                                      of files in the watched directory
+  0x00000010                          or subtree causes a change
+                                      notification wait operation to
+                                      return. The operating system
+                                      detects a change to the last
+                                      write-time only when the file is
+                                      written to the disk. For operating
+                                      systems that use extensive caching,
+                                      detection occurs only when the
+                                      cache is sufficiently flushed.
+
+  FILE_NOTIFY_CHANGE_LAST_ACCESS      Any change to the last access time
+                                      of files in the watched directory
+  0x00000020                          or subtree causes a change
+                                      notification wait operation to
+                                      return.
+
+  FILE_NOTIFY_CHANGE_CREATION         Any change to the creation time of
+                                      files in the watched directory or
+  0x00000040                          subtree causes a change
+                                      notification wait operation to
+                                      return.
+
+  FILE_NOTIFY_CHANGE_SECURITY         Any security-descriptor change in
+                                      the watched directory or subtree
+  0x00000100                          causes a change notification wait
+                                      operation to return.
+  ----------------------------------- -----------------------------------
+
+[out, optional] lpBytesReturned
+
+For synchronous calls, this parameter receives the number of bytes
+transferred into the lpBuffer parameter. For asynchronous calls, this
+parameter is undefined. You must use an asynchronous notification
+technique to retrieve the number of bytes transferred.
+
+[in, out, optional] lpOverlapped
+
+A pointer to an OVERLAPPED structure that supplies data to be used
+during asynchronous operation. Otherwise, this value is NULL. The Offset
+and OffsetHigh members of this structure are not used.
+
+[in, optional] lpCompletionRoutine
+
+A pointer to a completion routine to be called when the operation has
+been completed or canceled and the calling thread is in an alertable
+wait state. For more information about this completion routine, see
+FileIOCompletionRoutine.
+
+[in] ReadDirectoryNotifyInformationClass
+
+The type of information that ReadDirectoryChangesExW should write to the
+buffer to which the lpBuffer parameter points. Specify
+ReadDirectoryNotifyInformation to indicate that the information should
+consist of FILE_NOTIFY_INFORMATION structures, or
+ReadDirectoryNotifyExtendedInformation to indicate that the information
+should consist of FILE_NOTIFY_EXTENDED_INFORMATION structures.
+
+Return value
+
+If the function succeeds, the return value is nonzero. For synchronous
+calls, this means that the operation succeeded. For asynchronous calls,
+this indicates that the operation was successfully queued.
+
+If the function fails, the return value is zero. To get extended error
+information, call GetLastError.
+
+If the network redirector or the target file system does not support
+this operation, the function fails with ERROR_INVALID_FUNCTION.
+
+Remarks
+
+To obtain a handle to a directory, use the CreateFile function with the
+FILE_FLAG_BACKUP_SEMANTICS flag.
+
+A call to ReadDirectoryChangesExW can be completed synchronously or
+asynchronously. To specify asynchronous completion, open the directory
+with CreateFile as shown above, but additionally specify the
+FILE_FLAG_OVERLAPPED attribute in the dwFlagsAndAttributes parameter.
+Then specify an OVERLAPPED structure when you call
+ReadDirectoryChangesExW.
+
+When you first call ReadDirectoryChangesExW, the system allocates a
+buffer to store change information. This buffer is associated with the
+directory handle until it is closed and its size does not change during
+its lifetime. Directory changes that occur between calls to this
+function are added to the buffer and then returned with the next call.
+If the buffer overflows, ReadDirectoryChangesExW will still return true,
+but the entire contents of the buffer are discarded and the
+lpBytesReturned parameter will be zero, which indicates that your buffer
+was too small to hold all of the changes that occurred.
+
+Upon successful synchronous completion, the lpBuffer parameter is a
+formatted buffer and the number of bytes written to the buffer is
+available in lpBytesReturned. If the number of bytes transferred is
+zero, the buffer was either too large for the system to allocate or too
+small to provide detailed information on all the changes that occurred
+in the directory or subtree. In this case, you should compute the
+changes by enumerating the directory or subtree.
+
+For asynchronous completion, you can receive notification in one of
+three ways:
+
+- Using the GetOverlappedResult function. To receive notification
+  through GetOverlappedResult, do not specify a completion routine in
+  the lpCompletionRoutine parameter. Be sure to set the hEvent member of
+  the OVERLAPPED structure to a unique event.
+- Using the GetQueuedCompletionStatus function. To receive notification
+  through GetQueuedCompletionStatus, do not specify a completion routine
+  in lpCompletionRoutine. Associate the directory handle hDirectory with
+  a completion port by calling the CreateIoCompletionPort function.
+- Using a completion routine. To receive notification through a
+  completion routine, do not associate the directory with a completion
+  port. Specify a completion routine in lpCompletionRoutine. This
+  routine is called whenever the operation has been completed or
+  canceled while the thread is in an alertable wait state. The hEvent
+  member of the OVERLAPPED structure is not used by the system, so you
+  can use it yourself.
+
+For more information, see Synchronous and Asynchronous I/O.
+
+ReadDirectoryChangesExW fails with ERROR_INVALID_PARAMETER when the
+buffer length is greater than 64 KB and the application is monitoring a
+directory over the network. This is due to a packet size limitation with
+the underlying file sharing protocols.
+
+ReadDirectoryChangesExW fails with ERROR_NOACCESS when the buffer is not
+aligned on a DWORD boundary.
+
+ReadDirectoryChangesExW fails with ERROR_NOTIFY_ENUM_DIR when the system
+was unable to record all the changes to the directory. In this case, you
+should compute the changes by enumerating the directory or subtree.
+
+If you opened the file using the short name, you can receive change
+notifications for the short name.
+
+ReadDirectoryChangesExW is currently supported only for the NTFS file
+system.
+
+Transacted Operations
+
+If there is a transaction bound to the directory handle, then the
+notifications follow the appropriate transaction isolation rules.
+
+Requirements
+
+  Requirement                Value
+  -------------------------- -----------------------------------------------
+  Minimum supported client   Windows 10, version 1709 [desktop apps only]
+  Minimum supported server   Windows Server 2019 [desktop apps only]
+  Target Platform            Windows
+  Header                     winbase.h (include Windows.h)
+  Library                    Kernel32.lib
+  DLL                        Kernel32.dll
+
+See also
+
+CreateFile
+
+CreateIoCompletionPort
+
+Directory Management Functions
+
+FILE_NOTIFY_EXTENDED_INFORMATION
+
+FILE_NOTIFY_INFORMATION
+
+FileIOCompletionRoutine
+
+GetOverlappedResult
+
+GetQueuedCompletionStatus
+
+OVERLAPPED
+
+ReadDirectoryChangesW
+
+Source: https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-readdirectorychangesexw

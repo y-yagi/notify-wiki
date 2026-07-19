@@ -1,8 +1,8 @@
 ---
 title: USN Change Journal
 tags: [windows, ntfs, event-driven]
-updated: 2026-07-08
-sources: ["../sources/msdn-fsutil-usn.md"]
+updated: 2026-07-19
+sources: ["../sources/msdn-fsutil-usn.md", "../sources/oldnewthing-readdirectorychangesw-deletion-details.md", "../sources/msdn-fsctl-query-usn-journal.md", "../sources/msdn-fsctl-query-usn-journal-win32.md", "../sources/msdn-using-the-change-journal-identifier.md", "../sources/msdn-walking-a-buffer-of-change-journal-records.md", "../sources/msdn-fsctl-read-usn-journal.md"]
 ---
 
 # USN Change Journal
@@ -26,9 +26,39 @@ changes to a set of files.
 ## API / semantics
 
 - Managed at the admin/CLI level via `fsutil usn` (this source); the
-  underlying programmatic interface is `DeviceIoControl` with `FSCTL_*`
-  control codes and `USN_RECORD` structures (not detailed in this source —
-  a separate reference page).
+  underlying programmatic interface (user-mode) is `DeviceIoControl` on a
+  volume handle, with `FSCTL_*` control codes:
+  - Open the volume with `CreateFile(TEXT("\\\\.\\X:"), GENERIC_READ |
+    GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+    OPEN_EXISTING, 0, NULL)` — `X` is the drive letter; the volume must be
+    NTFS.
+  - `FSCTL_QUERY_USN_JOURNAL` — queries the current journal's identifier,
+    first/next USN, and capacity into a `USN_JOURNAL_DATA` struct. No
+    input buffer needed.
+  - `FSCTL_READ_USN_JOURNAL` — reads records selectively (e.g. by change
+    reason, or "only when file is closed") starting from a given
+    `StartUsn`, using the journal identifier obtained from
+    `FSCTL_QUERY_USN_JOURNAL` as an integrity check against reads from a
+    stale/prior journal instance.
+  - `FSCTL_ENUM_USN_DATA` — returns an unfiltered listing (enumeration) of
+    all records in a USN range instead of a selective read; use this when
+    you don't need `FSCTL_READ_USN_JOURNAL`'s filtering.
+  - Output buffer layout for both `FSCTL_READ_USN_JOURNAL` and
+    `FSCTL_ENUM_USN_DATA`: a leading `USN` (the next record's starting
+    point, used as `StartUsn` on the following call), followed by zero or
+    more `USN_RECORD_V2`/`USN_RECORD_V3` records. Each record is
+    variable-length: its first member `RecordLength` gives the record's
+    total byte size (including the trailing file name); walk the buffer
+    by repeatedly advancing a pointer by `RecordLength` until the
+    returned byte count is exhausted. `FileName`/`FileNameLength` give the
+    file name — **no guaranteed trailing null terminator**, so length
+    must come from `FileNameLength`, not string scanning. Max single
+    record size: `(MaxComponentLength - 1) * sizeof(WCHAR) +
+    sizeof(USN_RECORD)`, where `MaxComponentLength` comes from
+    `GetVolumeInformation`.
+  - This same `FSCTL_QUERY_USN_JOURNAL` control code also has a
+    **kernel-mode** invocation surface documented on a separate WDK DDI
+    reference page — see Limitations below.
 - `createjournal m=<maxsize> a=<allocationdelta>` creates (or, if one
   already exists, resizes in place) the journal on a volume. `maxsize`
   bounds the target size; `allocationdelta` is headroom added/removed at
@@ -74,25 +104,71 @@ changes to a set of files.
   journal is one shared per-volume resource used by multiple OS services
   simultaneously. Disabling it for one consumer's convenience actively harms
   unrelated services (indexing, replication) relying on it.
-- Structure of `USN_RECORD` itself and the full `FSCTL_*` DeviceIoControl
-  interface are out of scope for this source — this page only covers the
-  admin-facing `fsutil usn` surface, not the programmatic read API.
+- `FSCTL_QUERY_USN_JOURNAL` has **two documented invocation surfaces**: a
+  **kernel-mode** one (WDK DDI reference: called via `FltFsControlFile`
+  from a minifilter driver, or `ZwFsControlFile`, the kernel-mode native
+  API, taking a `FileObject`/`FileHandle` for the volume) and the
+  ordinary **user-mode** one (Win32 SDK reference: called via
+  `DeviceIoControl` on a handle from `CreateFile`). Both return a pointer
+  to a `USN_JOURNAL_DATA` structure; neither reference page details that
+  structure's fields further. See API/semantics above for the user-mode
+  call shape and the `USN_RECORD_V2`/`V3` buffer layout.
+- **Reading the journal requires admin rights — now confirmed**:
+  Microsoft's "Using the Change Journal Identifier" page states
+  explicitly: *"To perform this and all other change journal operations,
+  you must have system administrator privileges. That is, you must be a
+  member of the Administrators group."* This confirms what had earlier
+  only been a lower-confidence claim from a DevBlogs comment thread.
+  Neither the kernel-mode DDI page nor the user-mode Win32 reference page
+  for `FSCTL_QUERY_USN_JOURNAL` states this requirement in their own body
+  text — it's documented only on this separate conceptual page — but it
+  is now an authoritative, confirmed claim covering "all change journal
+  operations," not just the query call. The journal is therefore **not**
+  a lightweight, unprivileged alternative to
+  `[[readdirectorychangesw]]`/`[[readdirectorychangesexw]]`; reading it
+  requires the calling process to run as (or impersonate) a member of the
+  Administrators group.
+- **Possible discrepancy — ReFS support**: "Walking a Buffer of Change
+  Journal Records" states *"The target volume for USN operations must be
+  ReFS or NTFS 3.0 or later,"* naming ReFS as a supported filesystem for
+  USN operations. This is in tension with the Platform notes claim below
+  ("NTFS-specific — not available on FAT/exFAT/ReFS"), which is sourced
+  from the `fsutil usn` reference page. **Flagging this rather than
+  silently resolving it**: the two claims may reflect different points in
+  time (ReFS support could be a later addition) or different tooling
+  (`fsutil usn` vs. the raw `FSCTL_*` control codes), but no source
+  gathered so far reconciles them directly.
 
 ## Platform notes
 
-- NTFS-specific — not available on FAT/exFAT/ReFS (no version/support
-  history given in this source beyond "Applies to" listing current Windows
-  Server/Windows 10/11 releases).
+- NTFS-specific per `fsutil usn` docs — not available on FAT/exFAT/ReFS
+  (no version/support history given in that source beyond "Applies to"
+  listing current Windows Server/Windows 10/11 releases). **But see the
+  ReFS discrepancy flagged in Limitations above** — a different source
+  ("Walking a Buffer of Change Journal Records") states the target volume
+  "must be ReFS or NTFS 3.0 or later," implying ReFS *is* supported. Not
+  resolved between sources.
+- `FSCTL_QUERY_USN_JOURNAL` / `FSCTL_READ_USN_JOURNAL` (user-mode,
+  `winioctl.h`) minimum supported: Windows XP / Server 2003 (desktop apps
+  only). Network/clustered filesystem support (Windows 8 / Server 2012
+  era): SMB 3.0, SMB 3.0 Transparent Failover, and SMB 3.0 Scale-out File
+  Shares are **not** supported for either control code. Cluster Shared
+  Volume File System (CsvFS) support differs: **yes** for
+  `FSCTL_QUERY_USN_JOURNAL`, "see comment" for `FSCTL_READ_USN_JOURNAL`
+  — both carry a caveat that an application may see false positives
+  across CsvFS pause/resume.
 
 ## Related concepts
 
-- `[[readdirectorychangesw]]` — the live, per-directory-handle notification
-  API; Microsoft's own docs for it point to the USN journal specifically for
+- `[[readdirectorychangesw]]` / `[[readdirectorychangesexw]]` — the live,
+  per-directory-handle notification APIs; Microsoft's own docs for
+  `ReadDirectoryChangesW` point to the USN journal specifically for
   whole-volume tracking instead. Complementary rather than redundant: the
   journal survives across app restarts and covers the whole volume, at the
   cost of being coarser to consume (must track your own last-read USN) and
   carrying real administrative weight (disabling it is slow and
-  volume-wide).
+  volume-wide, plus reading it may itself require admin rights — see
+  Limitations above).
 - `[[fsevents]]` — closest cross-platform analogue: both are persistent,
   queryable-from-a-past-checkpoint change logs rather than live callback
   streams, letting a consumer catch up on changes made while it wasn't
@@ -102,7 +178,16 @@ changes to a set of files.
   both are live-only, in-memory event streams that lose everything once the
   fd is closed or the queue overflows.
 - [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
+- [[windows-notification-apis]] — history and feature-by-feature
+  comparison across all four Windows notification APIs, with a current
+  recommendation.
 
 ## Sources
 
 - [msdn-fsutil-usn](../sources/msdn-fsutil-usn.md)
+- [oldnewthing-readdirectorychangesw-deletion-details](../sources/oldnewthing-readdirectorychangesw-deletion-details.md)
+- [msdn-fsctl-query-usn-journal](../sources/msdn-fsctl-query-usn-journal.md)
+- [msdn-fsctl-query-usn-journal-win32](../sources/msdn-fsctl-query-usn-journal-win32.md)
+- [msdn-using-the-change-journal-identifier](../sources/msdn-using-the-change-journal-identifier.md)
+- [msdn-walking-a-buffer-of-change-journal-records](../sources/msdn-walking-a-buffer-of-change-journal-records.md)
+- [msdn-fsctl-read-usn-journal](../sources/msdn-fsctl-read-usn-journal.md)
