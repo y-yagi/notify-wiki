@@ -1,6 +1,49 @@
 # Change log
 
 ## 2026-07-19
+- `/lint` follow-up: `raw/lemon-kqueue-freenix2001.pdf` is missing from
+  disk. Git forensics (`git log --diff-filter=A --all`, `git ls-files raw/`)
+  confirm it was never committed — only the derived
+  `wiki/sources/lemon-kqueue-freenix2001.md` summary was, in commit
+  `430bc00`. Per user direction, not treating this as recoverable or
+  deleting the page: annotated the source page's "Raw file" line to state
+  plainly that the PDF is currently missing and unverifiable, while keeping
+  the existing summary as the audit trail. `wiki/concepts/kqueue.md` only
+  references the source via link/Sources-list, so needed no change.
+- `/lint` follow-up: resolved/refined the two discrepancies flagged in the
+  previous batch's `usn-journal.md`/`readdirectorychangesexw.md` edits, by
+  re-reading the raw primary sources directly.
+  - **USN journal ReFS support — resolved**: re-checked `raw/msdn-fsutil-
+    usn.txt` directly; it never mentions ReFS or FAT/FAT32 at all (NTFS
+    only, by omission — not an explicit exclusion). The earlier "not
+    available on FAT/exFAT/ReFS" Platform-notes claim was an unsupported
+    generalization introduced while writing the page, not something
+    either source actually states. Corrected `concepts/usn-journal.md`:
+    ReFS is now stated as supported (per "Walking a Buffer of Change
+    Journal Records": *"must be ReFS or NTFS 3.0 or later"*); ExFAT's
+    journal-less status is kept as a separately-sourced, lower-confidence
+    claim. This was **not** a real conflict between two authoritative
+    sources — just corrected.
+  - **`ReadDirectoryChangesExW` NTFS-only vs. 64 KB network cap —
+    confirmed as a genuine Microsoft documentation inconsistency**:
+    re-checked `raw/msdn-readdirectorychangesexw.txt` directly; the same
+    Remarks section of the same page states both "supported only for the
+    NTFS file system" and a 64 KB buffer cap "when monitoring a directory
+    over the network" (implying network support exists). This is not
+    resolvable from the wiki's sources — tightened the wording in
+    `concepts/readdirectorychangesexw.md` to state plainly that this is
+    Microsoft's own internal inconsistency, not wiki uncertainty.
+  - Updated `comparisons/windows-notification-apis.md`'s support table
+    and Takeaways to match both corrections.
+- `/lint` health check found `comparisons/recursive-watching.md` missing
+  its frontmatter `sources` field entirely. Fixed: added 14 source-page
+  references covering every mechanism/library row in the comparison table
+  (dnotify, inotify, fanotify, kqueue, FSEvents, ReadDirectoryChangesW,
+  USN journal, libuv, watchman, chokidar, notify-rs, fsnotify-go, listen).
+  `updated` date left as-is (2026-07-09) since no content changed, only
+  frontmatter. Remaining `/lint` findings (missing `raw/lemon-kqueue-
+  freenix2001.pdf`, the two already-flagged in-page discrepancies, the
+  `[[fen]]` forward reference) left untouched pending user direction.
 - Added `wiki/comparisons/windows-notification-apis.md`: history, timeline,
   and axis-by-axis feature comparison of all four Windows notification
   APIs (`FindFirstChangeNotification`, `ReadDirectoryChangesW`,

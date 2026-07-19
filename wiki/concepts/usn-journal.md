@@ -128,26 +128,32 @@ changes to a set of files.
   `[[readdirectorychangesw]]`/`[[readdirectorychangesexw]]`; reading it
   requires the calling process to run as (or impersonate) a member of the
   Administrators group.
-- **Possible discrepancy — ReFS support**: "Walking a Buffer of Change
-  Journal Records" states *"The target volume for USN operations must be
-  ReFS or NTFS 3.0 or later,"* naming ReFS as a supported filesystem for
-  USN operations. This is in tension with the Platform notes claim below
-  ("NTFS-specific — not available on FAT/exFAT/ReFS"), which is sourced
-  from the `fsutil usn` reference page. **Flagging this rather than
-  silently resolving it**: the two claims may reflect different points in
-  time (ReFS support could be a later addition) or different tooling
-  (`fsutil usn` vs. the raw `FSCTL_*` control codes), but no source
-  gathered so far reconciles them directly.
+- **ReFS support — resolved, prior wiki text overstated the exclusion**:
+  an earlier version of this page claimed "not available on FAT/exFAT/
+  ReFS," but re-checking the `fsutil usn` source directly shows it never
+  actually mentions ReFS (or FAT/FAT32) at all — it only describes NTFS
+  behavior, without asserting other filesystems are excluded. The
+  ReFS-exclusion claim was an unsupported generalization introduced while
+  writing this page, not something either source states. "Walking a
+  Buffer of Change Journal Records" is explicit and authoritative here:
+  *"The target volume for USN operations must be ReFS or NTFS 3.0 or
+  later."* Treat ReFS as supported. See Platform notes below for the
+  corrected filesystem-support summary.
 
 ## Platform notes
 
-- NTFS-specific per `fsutil usn` docs — not available on FAT/exFAT/ReFS
-  (no version/support history given in that source beyond "Applies to"
-  listing current Windows Server/Windows 10/11 releases). **But see the
-  ReFS discrepancy flagged in Limitations above** — a different source
-  ("Walking a Buffer of Change Journal Records") states the target volume
-  "must be ReFS or NTFS 3.0 or later," implying ReFS *is* supported. Not
-  resolved between sources.
+- **Supported filesystems**: NTFS 3.0+ and ReFS, per "Walking a Buffer of
+  Change Journal Records" (*"The target volume for USN operations must be
+  ReFS or NTFS 3.0 or later"*) — this is the most specific, authoritative
+  statement on filesystem scope found so far. The `fsutil usn` reference
+  page doesn't contradict this; it simply never mentions ReFS (or FAT/
+  FAT32) either way, describing only NTFS behavior.
+- **ExFAT has no change journal at all** — stated in a DevBlogs
+  comment-thread discussion (lower confidence — reader claim, not from
+  Microsoft's own reference docs), consistent with ExFAT's absence from
+  every other source's filesystem list here.
+- No version/support history given in the `fsutil usn` source beyond
+  "Applies to" listing current Windows Server/Windows 10/11 releases.
 - `FSCTL_QUERY_USN_JOURNAL` / `FSCTL_READ_USN_JOURNAL` (user-mode,
   `winioctl.h`) minimum supported: Windows XP / Server 2003 (desktop apps
   only). Network/clustered filesystem support (Windows 8 / Server 2012

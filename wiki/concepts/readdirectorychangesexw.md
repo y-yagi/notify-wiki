@@ -46,18 +46,29 @@ completion is otherwise identical to `ReadDirectoryChangesW`.
 
 ## Limitations & gotchas
 
-- **NTFS-only**: the source states "ReadDirectoryChangesExW is currently
-  supported only for the NTFS file system." No SMB/CsvFS/ReFS network
-  support table is given at all, unlike `ReadDirectoryChangesW`'s page —
-  it's not documented here whether that means no network support or just
-  an undocumented gap.
+- **NTFS-only claim conflicts with network-buffer-cap language in the same
+  document — confirmed as a genuine inconsistency in Microsoft's own
+  page, not a wiki misread.** The single MSDN reference page for this API
+  states, in its own Remarks section: *"ReadDirectoryChangesExW fails with
+  ERROR_INVALID_PARAMETER when the buffer length is greater than 64 KB
+  and the application is monitoring a directory over the network"* — which
+  presupposes network monitoring is possible — and, a few lines later in
+  the same Remarks section: *"ReadDirectoryChangesExW is currently
+  supported only for the NTFS file system."* Since SMB network shares are
+  not NTFS volumes, these two sentences describe contradictory
+  capabilities within one document. No SMB/CsvFS/ReFS support table is
+  given at all (unlike `ReadDirectoryChangesW`'s page), so there's no
+  independent way to resolve which statement is accurate. **Not
+  resolvable from this source alone** — flagging rather than guessing;
+  a newer or corrected MSDN revision, or direct testing against an SMB
+  share, would be needed to settle it.
 - Same buffer-overflow silent-discard behavior as `ReadDirectoryChangesW`:
   the call still returns success but `lpBytesReturned` comes back 0, and
   the only correct response is a full directory/subtree re-enumeration.
-- Same 64 KB buffer cap over the network (`ERROR_INVALID_PARAMETER`) and
-  DWORD-alignment requirement (`ERROR_NOACCESS`) as `ReadDirectoryChangesW`
-  — though given the NTFS-only claim above, the network cap's relevance to
-  this specific API isn't clear from this source.
+- Same DWORD-alignment requirement (`ERROR_NOACCESS`) as
+  `ReadDirectoryChangesW`. The 64 KB network buffer cap is stated
+  verbatim in this API's own Remarks (see above) despite the NTFS-only
+  claim in the same section — carried over here as-is, not resolved.
 - `ERROR_NOTIFY_ENUM_DIR` — same distinct "system couldn't record all
   changes" failure as `ReadDirectoryChangesW`, same full-enumeration
   fallback.

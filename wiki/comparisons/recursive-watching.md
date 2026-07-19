@@ -2,6 +2,7 @@
 title: "Comparison: recursive watching support"
 tags: [comparison, recursive-watching]
 updated: 2026-07-09
+sources: ["../sources/kernel-dnotify.md", "../sources/man7-inotify-7.md", "../sources/quora-love-inotify-recursive.md", "../sources/man7-fanotify-7.md", "../sources/openbsd-kqueue-2.md", "../sources/apple-fsevents-progguide.md", "../sources/msdn-readdirectorychangesw.md", "../sources/msdn-fsutil-usn.md", "../sources/libuv-fs-event.md", "../sources/watchman-cookies.md", "../sources/chokidar-readme.md", "../sources/notify-rs-readme.md", "../sources/fsnotify-go-readme.md", "../sources/listen-readme.md"]
 ---
 
 # Recursive watching support

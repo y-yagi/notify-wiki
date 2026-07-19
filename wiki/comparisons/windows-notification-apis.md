@@ -54,7 +54,7 @@ Two observations from the wiki's sources:
 | Overflow/drop signaling | N/A | Silent: success + 0 bytes returned; must full-rescan | Same silent-zero-byte pattern as `ReadDirectoryChangesW` | No live overflow — but records can roll off if a slow consumer doesn't keep up with `maxsize`/`allocationdelta` sizing (inferred, not explicitly stated in the sources gathered) |
 | Per-file granularity | No — directory/subtree only | No — directory/subtree only | No — directory/subtree only | No per-file *watch*, but every record does carry the specific filename that changed |
 | Admin/privilege requirement | None documented | None documented | None documented | **Yes — confirmed**: "you must have system administrator privileges... a member of the Administrators group" for all change-journal operations |
-| Network/SMB/CsvFS support | SMB 3.0 (+TFO, +SO) and ReFS supported (Win8/Server2012+); CsvFS qualified (pause/resume false positives) | Same support table as `FindFirstChangeNotification` | **NTFS-only** per its own docs — no SMB/CsvFS/ReFS table given at all | SMB 3.0/TFO/SO **not** supported; CsvFS supported for query, "see comment" for read; filesystem scope itself disputed between sources (NTFS-only vs. "ReFS or NTFS 3.0+" — see [[usn-journal]] Limitations) |
+| Network/SMB/CsvFS support | SMB 3.0 (+TFO, +SO) and ReFS supported (Win8/Server2012+); CsvFS qualified (pause/resume false positives) | Same support table as `FindFirstChangeNotification` | **NTFS-only** per its own docs — but the same MSDN page also states a 64 KB buffer cap "when monitoring a directory over the network," an internal inconsistency in Microsoft's own text (see [[readdirectorychangesexw]] Limitations) | NTFS 3.0+ and ReFS supported (per "Walking a Buffer..."); SMB 3.0/TFO/SO **not** supported; CsvFS supported for query, "see comment" for read; ExFAT has no journal at all (lower-confidence, comment-thread source) |
 | App model | Desktop apps only | Desktop **and UWP** | Desktop apps only | Desktop apps only (implied by control-code requirements table) |
 | Minimum OS | Windows XP / Server 2003 | Windows XP / Server 2003 | Windows 10 1709 / Server 2019 | Windows XP / Server 2003 |
 
@@ -88,14 +88,17 @@ Two observations from the wiki's sources:
   disruptive to other consumers sharing the volume, and consuming it
   correctly means hand-rolling USN-cursor tracking and buffer-walking
   logic that `ReadDirectoryChangesW`/`ExW` handle for you.
-- **Two open ambiguities carried over from the concept pages, not resolved
-  here**:
-  1. Whether `ReadDirectoryChangesExW`'s "NTFS-only" claim means literally
-     no network support, or is just an undocumented gap relative to
-     `ReadDirectoryChangesW`'s explicit SMB/CsvFS/ReFS table.
-  2. Whether the USN journal supports ReFS — one source says NTFS-only,
-     another says "ReFS or NTFS 3.0 or later." See [[usn-journal]]
-     Limitations/Platform notes for both, flagged rather than guessed at.
+- **One open ambiguity remains, confirmed as Microsoft's own documentation
+  inconsistency rather than a wiki uncertainty**: `ReadDirectoryChangesExW`'s
+  single MSDN reference page states both "supported only for the NTFS file
+  system" and a 64 KB buffer cap "when monitoring a directory over the
+  network" — two claims that can't both be literally true, in the same
+  Remarks section of the same document. No independent source resolves
+  which one is accurate; see [[readdirectorychangesexw]] Limitations.
+  (The USN journal's filesystem support — previously flagged here as a
+  second discrepancy — turned out to be a wiki-side overgeneralization
+  rather than a real source conflict, and has been corrected: NTFS 3.0+
+  and ReFS are both supported, per [[usn-journal]].)
 
 ## Related concepts
 

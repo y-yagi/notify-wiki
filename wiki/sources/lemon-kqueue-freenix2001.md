@@ -6,7 +6,13 @@ updated: 2026-07-12
 
 # lemon-kqueue-freenix2001
 
-**Raw file**: [`raw/lemon-kqueue-freenix2001.pdf`](../../raw/lemon-kqueue-freenix2001.pdf)
+**Raw file**: `raw/lemon-kqueue-freenix2001.pdf` — **currently missing**.
+This file was never committed to git (no `.gitignore` rule excludes PDFs,
+and `git log` shows it was never tracked), so it isn't recoverable from
+version history. It evidently existed locally when this page was written
+(2026-07-12) but is absent as of 2026-07-19. The summary below is kept as
+the audit trail of what the paper claimed, but none of it can be
+re-verified against the source until the PDF is restored to `raw/`.
 **Origin**: Jonathan Lemon (FreeBSD Project), *"Kqueue: A generic and scalable
 event notification facility"*, FREENIX Track, 2001 USENIX Annual Technical
 Conference (Boston, MA). Note: often cited/searched as "USENIX 2000" because
