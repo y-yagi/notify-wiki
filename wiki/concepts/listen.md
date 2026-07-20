@@ -68,9 +68,10 @@ than implementing the native calls itself.
 - [[kqueue]] — \*BSD backend (via `rb-kqueue`, an optional dependency).
 - [[readdirectorychangesw]] — implied Windows backend, wrapped by `wdm`
   (README doesn't confirm which native Win32 API `wdm` itself calls).
-- [[libuv]] / [[chokidar]] — comparable "one callback vocabulary over several
-  native backends" libraries; `listen` is the same pattern applied to Ruby,
-  built on separate per-platform gems rather than one shared C library.
+- [[libuv]] / [[chokidar]] / [[watchdog]] — comparable "one callback
+  vocabulary over several native backends" libraries; `listen` is the same
+  pattern applied to Ruby, built on separate per-platform gems rather than
+  one shared C library (watchdog) or shared C library (libuv/Chokidar).
 - [[recursive-watching]] — cross-cutting comparison of tree-watching support;
   `listen` is listed there as not documented in this source.
 

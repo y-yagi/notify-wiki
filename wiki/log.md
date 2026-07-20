@@ -1,5 +1,14 @@
 # Change log
 
+## 2026-07-20
+- Ingested `raw/watchdog-readme.md` (Python `watchdog` library README,
+  fetched from GitHub at user's direction since `raw/` had no matching
+  source yet). Added `wiki/sources/watchdog-readme.md` and new concept page
+  `wiki/concepts/watchdog.md`. Added a `watchdog` row to
+  `comparisons/recursive-watching.md` and reciprocal `[[watchdog]]` links
+  from `concepts/chokidar.md`, `concepts/fsnotify-go.md`, and
+  `concepts/listen.md`. Updated `wiki/index.md`.
+
 ## 2026-07-19
 - `/lint` follow-up: `raw/lemon-kqueue-freenix2001.pdf` is missing from
   disk. Git forensics (`git log --diff-filter=A --all`, `git ls-files raw/`)

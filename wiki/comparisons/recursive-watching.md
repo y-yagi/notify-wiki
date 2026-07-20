@@ -1,8 +1,8 @@
 ---
 title: "Comparison: recursive watching support"
 tags: [comparison, recursive-watching]
-updated: 2026-07-09
-sources: ["../sources/kernel-dnotify.md", "../sources/man7-inotify-7.md", "../sources/quora-love-inotify-recursive.md", "../sources/man7-fanotify-7.md", "../sources/openbsd-kqueue-2.md", "../sources/apple-fsevents-progguide.md", "../sources/msdn-readdirectorychangesw.md", "../sources/msdn-fsutil-usn.md", "../sources/libuv-fs-event.md", "../sources/watchman-cookies.md", "../sources/chokidar-readme.md", "../sources/notify-rs-readme.md", "../sources/fsnotify-go-readme.md", "../sources/listen-readme.md"]
+updated: 2026-07-20
+sources: ["../sources/kernel-dnotify.md", "../sources/man7-inotify-7.md", "../sources/quora-love-inotify-recursive.md", "../sources/man7-fanotify-7.md", "../sources/openbsd-kqueue-2.md", "../sources/apple-fsevents-progguide.md", "../sources/msdn-readdirectorychangesw.md", "../sources/msdn-fsutil-usn.md", "../sources/libuv-fs-event.md", "../sources/watchman-cookies.md", "../sources/chokidar-readme.md", "../sources/notify-rs-readme.md", "../sources/fsnotify-go-readme.md", "../sources/listen-readme.md", "../sources/watchdog-readme.md"]
 ---
 
 # Recursive watching support
@@ -42,6 +42,7 @@ answers, not just yes/no:
 | [[notify-rs]] | Not documented in our source | The notify-rs README doesn't state a recursive-watch default either way — worth checking `docs.rs` directly before relying on this. |
 | [[fsnotify-go]] | No | README states recursive watching is "on the roadmap," not shipped; each subdirectory needs its own explicit `Add()` call. |
 | [[listen]] | Not documented in our source | README doesn't state a recursive-watch model either way; unclear whether it's inherited per-adapter (e.g. free on Darwin/Windows the way [[libuv]] gets it) or built by `listen` itself in userspace. |
+| [[watchdog]] | Yes | `observer.schedule(handler, path, recursive=True)` is an explicit boolean at schedule time — same shape as [[chokidar]] and [[readdirectorychangesw]]'s `bWatchSubtree`. |
 
 ## Takeaways
 

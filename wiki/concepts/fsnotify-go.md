@@ -74,6 +74,9 @@ mechanism, which has no dedicated concept page yet.
   that page's Limitations section for the naming collision.
 - [[chokidar]] / [[notify-rs]] — both cite this library as a direct
   inspiration.
+- [[watchdog]] — Python's equivalent in spirit; unlike fsnotify-go, ships
+  recursive watching (`recursive=True`) as a shipped feature rather than a
+  roadmap item.
 - [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
 
 ## Sources

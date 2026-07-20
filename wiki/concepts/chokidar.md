@@ -70,6 +70,10 @@ Chokidar layers its `add`/`change`/`unlink` naming on top of).
 - [[listen]] — Ruby's equivalent in spirit (one callback over several native
   backends, plus a polling fallback), but wraps separate per-platform gems
   rather than one shared library like libuv underneath Chokidar.
+- [[watchdog]] — Python's equivalent in spirit (native backend per platform
+  plus a polling fallback); watchdog additionally documents concrete
+  interoperability gotchas (Vim's write-and-swap pattern, CIFS shares) not
+  called out in Chokidar's own README.
 - [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
 
 ## Sources
