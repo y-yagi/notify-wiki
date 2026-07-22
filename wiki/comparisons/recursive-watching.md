@@ -1,8 +1,8 @@
 ---
 title: "Comparison: recursive watching support"
 tags: [comparison, recursive-watching]
-updated: 2026-07-20
-sources: ["../sources/kernel-dnotify.md", "../sources/man7-inotify-7.md", "../sources/quora-love-inotify-recursive.md", "../sources/man7-fanotify-7.md", "../sources/openbsd-kqueue-2.md", "../sources/apple-fsevents-progguide.md", "../sources/msdn-readdirectorychangesw.md", "../sources/msdn-fsutil-usn.md", "../sources/libuv-fs-event.md", "../sources/watchman-cookies.md", "../sources/chokidar-readme.md", "../sources/notify-rs-readme.md", "../sources/fsnotify-go-readme.md", "../sources/listen-readme.md", "../sources/watchdog-readme.md"]
+updated: 2026-07-23
+sources: ["../sources/kernel-dnotify.md", "../sources/man7-inotify-7.md", "../sources/quora-love-inotify-recursive.md", "../sources/man7-fanotify-7.md", "../sources/openbsd-kqueue-2.md", "../sources/apple-fsevents-progguide.md", "../sources/msdn-readdirectorychangesw.md", "../sources/msdn-fsutil-usn.md", "../sources/libuv-fs-event.md", "../sources/watchman-cookies.md", "../sources/chokidar-readme.md", "../sources/notify-rs-readme.md", "../sources/fsnotify-go-readme.md", "../sources/listen-readme.md", "../sources/watchdog-readme.md", "../sources/deno-file-watcher-rs.md", "../sources/bun-watcher-rs.md"]
 ---
 
 # Recursive watching support
@@ -43,6 +43,8 @@ answers, not just yes/no:
 | [[fsnotify-go]] | No | README states recursive watching is "on the roadmap," not shipped; each subdirectory needs its own explicit `Add()` call. |
 | [[listen]] | Not documented in our source | README doesn't state a recursive-watch model either way; unclear whether it's inherited per-adapter (e.g. free on Darwin/Windows the way [[libuv]] gets it) or built by `listen` itself in userspace. |
 | [[watchdog]] | Yes | `observer.schedule(handler, path, recursive=True)` is an explicit boolean at schedule time — same shape as [[chokidar]] and [[readdirectorychangesw]]'s `bWatchSubtree`. |
+| [[deno-watch]] | Yes | Inherited wholesale from [[notify-rs]]'s `RecursiveMode::Recursive` — Deno itself implements no watching logic. |
+| [[bun-watcher]] | Doesn't fit the model | Watches neither a recursively-registered subtree nor a manually-walked one at startup — the watch list is built incrementally as the module resolver/bundler references files, so "recursion" is really "whatever the import graph reaches," not a subtree operation at all. See Takeaways. |
 
 ## Takeaways
 
@@ -71,3 +73,12 @@ answers, not just yes/no:
   API reference, Watchman's watch-establishment code/docs, and listen's
   adapter source (or the `rb-inotify`/`rb-fsevent`/`rb-kqueue`/`wdm` gems it
   wraps), not just the READMEs and cookies.md we have today.
+- **Bun is a fourth model this page's original three categories don't
+  capture.** It isn't a native recursive watch (no single API call covers a
+  subtree), isn't the caller-walks-the-tree pattern either (nothing walks
+  the filesystem tree at all), and isn't a global/volume-wide stream. It's
+  driven by the *module graph*: `Watcher::add_file`/`add_directory` are
+  called incrementally as the bundler resolves imports, so the watch set is
+  exactly "files and directories reachable from the entry point," which can
+  both under- and over-shoot a true recursive watch depending on what's
+  actually imported. See [[bun-watcher]] for detail.

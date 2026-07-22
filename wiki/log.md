@@ -1,5 +1,58 @@
 # Change log
 
+## 2026-07-23
+- Investigated (user request) how Deno and Bun implement their built-in
+  `--watch` flags, then ingested both.
+- **Deno**: fetched `cli/util/file_watcher.rs` from `denoland/deno` (`main`
+  branch) verbatim, saved as `raw/deno-file-watcher-rs.txt`. Added
+  `wiki/sources/deno-file-watcher-rs.md` and new concept page
+  `wiki/concepts/deno-watch.md`. Key finding: Deno implements no OS-level
+  watching itself — it's a thin wrapper around [[notify-rs]]
+  (`RecommendedWatcher` + `RecursiveMode::Recursive`), adding only a
+  200ms-debounce layer (`DebouncedReceiver`), two restart modes
+  (`WatcherRestartMode::Automatic`/`Manual`), and synthetic-signal shutdown
+  (`deno_signals::raise`, 500ms graceful-shutdown timeout) on top. Updated
+  `wiki/concepts/notify-rs.md` to name Deno as a concrete consumer
+  (Overview + Related concepts + sources frontmatter).
+- **Bun**: fetched all four files under `oven-sh/bun`'s `src/watcher/`
+  (`main` branch) verbatim — `Watcher.rs` (platform-independent core),
+  `INotifyWatcher.rs`, `KEventWatcher.rs`, `WindowsWatcher.rs` — saved as
+  `raw/bun-watcher-rs.txt`, `raw/bun-inotifywatcher-rs.txt`,
+  `raw/bun-keventwatcher-rs.txt`, `raw/bun-windowswatcher-rs.txt`. Added
+  `wiki/sources/bun-watcher-rs.md` and new concept page
+  `wiki/concepts/bun-watcher.md`. Notable finding: contrary to older
+  secondary sources describing Bun's watcher as Zig, the current source
+  tree has it rewritten as a standalone Rust module (originally
+  `src/watcher.zig`, per the project's own history) dispatching to one of
+  three platform backends at compile time. Key design point: watching is
+  **not** a recursive/root-based subtree watch at all — the watch list is
+  built incrementally as the module resolver/bundler walks the import
+  graph, excluding `node_modules` and anything outside the top-level
+  directory. Each backend talks to its native OS mechanism directly with no
+  wrapper library (inotify on Linux/Android, kqueue's `EVFILT_VNODE` on
+  macOS/FreeBSD, `ReadDirectoryChangesW` via IOCP on Windows), and both
+  Linux and macOS/FreeBSD backends implement a two-phase read/kevent
+  coalescing scheme (100µs default wait) to fight event-burst noise.
+  `--watch` and `--hot` share this exact watcher, differing only in the
+  `on_file_update` callback (full process restart vs. in-place module-cache
+  swap preserving `globalThis`).
+- Cross-linked the two new pages: `[[bun-watcher]]` added to
+  `concepts/inotify.md`, `concepts/kqueue.md`,
+  `concepts/readdirectorychangesw.md` (each backend's direct native-API
+  usage), and `concepts/libuv.md` (contrast: module-graph-driven vs.
+  direct-path watching); `[[deno-watch]]` and `[[bun-watcher]]` cross-link
+  each other in their own Related concepts sections.
+- Updated `comparisons/recursive-watching.md`: added a `deno-watch` row
+  (Yes, inherited from notify-rs) and a `bun-watcher` row (doesn't fit the
+  page's existing three-category model — its "recursion" is really
+  incremental per-module watching driven by the import graph, not a native
+  subtree primitive, a userspace tree-walk, or a global stream). Added a
+  new Takeaways bullet explaining Bun as a fourth model the original
+  three-category framing didn't anticipate. Updated frontmatter `sources`
+  and `updated` date.
+- Updated `wiki/index.md`: added `bun-watcher` and `deno-watch` to
+  Concepts (alphabetical), added both new sources to Sources.
+
 ## 2026-07-20
 - Ingested `raw/watchdog-readme.md` (Python `watchdog` library README,
   fetched from GitHub at user's direction since `raw/` had no matching

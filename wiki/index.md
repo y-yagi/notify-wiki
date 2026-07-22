@@ -5,7 +5,9 @@ See `/CLAUDE.md` for how this wiki is organized and maintained.
 
 ## Concepts
 
+- [bun-watcher](concepts/bun-watcher.md)
 - [chokidar](concepts/chokidar.md)
+- [deno-watch](concepts/deno-watch.md)
 - [dnotify](concepts/dnotify.md)
 - [endpoint-security](concepts/endpoint-security.md)
 - [fanotify](concepts/fanotify.md)
@@ -77,6 +79,8 @@ Solaris/illumos FEN (`port_create`/`port_get`), referenced from
 - [apple-endpointsecurity-esmessage-h-excerpt](sources/apple-endpointsecurity-esmessage-h-excerpt.md) — EndpointSecurity ESMessage.h, curated excerpt (Apple SDK header, mirrored)
 - [listen-readme](sources/listen-readme.md) — Listen (Ruby gem) README
 - [watchdog-readme](sources/watchdog-readme.md) — Watchdog (Python) README
+- [deno-file-watcher-rs](sources/deno-file-watcher-rs.md) — Deno `cli/util/file_watcher.rs` (GitHub, `main`)
+- [bun-watcher-rs](sources/bun-watcher-rs.md) — Bun `src/watcher/` (GitHub, `main`): `Watcher.rs`, `INotifyWatcher.rs`, `KEventWatcher.rs`, `WindowsWatcher.rs`
 
 ## Log
 

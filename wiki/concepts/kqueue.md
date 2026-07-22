@@ -191,6 +191,11 @@ rather than a discrepancy between sources.
 - `[[fsevents]]` — Darwin's whole-tree, persistent, directory-granularity
   sibling; Apple's own guidance is kqueue for single-file fine-grained
   watching and FSEvents for passive large-tree monitoring.
+- `[[bun-watcher]]` — Bun's macOS/FreeBSD backend (`KEventWatcher`)
+  registers `EVFILT_VNODE` kevents directly, one fd per watched item, on a
+  shared `kqueue` fd — the same fd-per-file model described above, plus its
+  own eviction/compaction bookkeeping to reclaim fds as watched items are
+  removed.
 - [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
 - [[kqueue-vs-fsevents]] — systematic axis-by-axis comparison against FSEvents.
 

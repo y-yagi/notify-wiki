@@ -1,8 +1,8 @@
 ---
 title: notify-rs
 tags: [userspace-library, rust, cross-platform, event-driven]
-updated: 2026-07-09
-sources: ["../sources/notify-rs-readme.md", "../sources/notify-rs-fsevent-rs.md"]
+updated: 2026-07-23
+sources: ["../sources/notify-rs-readme.md", "../sources/notify-rs-fsevent-rs.md", "../sources/deno-file-watcher-rs.md"]
 ---
 
 # notify-rs
@@ -13,7 +13,10 @@ sources: ["../sources/notify-rs-readme.md", "../sources/notify-rs-fsevent-rs.md"
 crate for Rust, used by rust-analyzer, zed, watchexec, cargo-watch, mdBook,
 and others. It was created explicitly out of the absence of a mature
 C/Rust cross-platform notify library, citing Go's [[fsnotify-go]] and
-Node's [[chokidar]] as direct inspirations.
+Node's [[chokidar]] as direct inspirations. Deno's `--watch` flag
+([[deno-watch]]) is a concrete production consumer: `cli/util/file_watcher.rs`
+wraps `RecommendedWatcher` directly, adding only debouncing and restart-mode
+selection on top — no watching logic of its own.
 
 ## API / semantics
 
@@ -59,9 +62,13 @@ picks one native mechanism per OS with no user-facing choice).
   into the core watcher rather than splitting it into separate crates.
 - [[fsnotify-go]] — cited inspiration; Go equivalent, notably still lacking
   a fanotify or polling backend that notify-rs already has.
+- [[deno-watch]] — a real consumer: Deno's `--watch` flag is a thin
+  debounce/restart-mode layer built directly on `RecommendedWatcher`, with
+  no OS-specific code of its own.
 - [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
 
 ## Sources
 
 - [notify-rs-readme](../sources/notify-rs-readme.md)
 - [notify-rs-fsevent-rs](../sources/notify-rs-fsevent-rs.md)
+- [deno-file-watcher-rs](../sources/deno-file-watcher-rs.md)

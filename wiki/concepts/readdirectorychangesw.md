@@ -118,6 +118,9 @@ whenever an application needs to know what happened.
 - `[[usn-journal]]` — the volume-wide, persistent alternative this API's own
   docs point to for whole-volume tracking; unlike this live per-directory
   handle, the journal survives app restarts and covers the whole volume.
+- `[[bun-watcher]]` — Bun's Windows backend (`WindowsWatcher`) calls this
+  API directly via an I/O completion port with overlapped I/O, one 64 KB
+  buffer per watched directory — no wrapper library in between.
 - [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
 - [[windows-notification-apis]] — history and feature-by-feature
   comparison across all four Windows notification APIs, with a current

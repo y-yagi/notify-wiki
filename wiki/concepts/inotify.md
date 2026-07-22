@@ -187,6 +187,10 @@ Read-only flags (only ever appear in the returned mask, never settable):
 - `[[io_uring]]` — general Linux async I/O facility; conceivably usable to
   read an inotify fd asynchronously instead of blocking on `read(2)`, but no
   ingested source confirms this usage.
+- `[[bun-watcher]]` — Bun's Linux backend (`INotifyWatcher`) talks to
+  inotify directly, with no library in between; because inotify has no
+  native recursion, Bun's incremental per-module watch registration serves
+  as its substitute.
 - [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
 
 ## Sources

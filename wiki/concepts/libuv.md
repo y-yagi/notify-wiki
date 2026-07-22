@@ -89,6 +89,11 @@ source-confirmed the way the macOS one now is.
   shape" goal in Ruby, but achieved by delegating to separate per-platform
   gems (`rb-inotify`, `rb-fsevent`, `rb-kqueue`, `wdm`) rather than one
   shared C library implementing every backend itself.
+- [[bun-watcher]] — a sharper contrast than the above: Bun implements each
+  platform backend itself rather than sharing one C library, and its watch
+  list is populated incrementally from the module graph rather than by
+  watching whatever path the caller names directly, the way `uv_fs_event_t`
+  does.
 - [[recursive-watching]] — cross-cutting comparison of tree-watching support across all mechanisms/libraries in this wiki.
 
 ## Sources
