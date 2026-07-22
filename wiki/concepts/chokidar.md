@@ -16,6 +16,11 @@ those two primitives — duplicate events, missing macOS filenames, raw
 `rename`-only event naming — into a consistent `add`/`change`/`unlink`
 vocabulary, and to always support recursive watching.
 
+Used directly by [Vite](https://github.com/vitejs/vite)'s dev server for
+watching the project root and feeding HMR (`packages/vite/src/node/server/index.ts`,
+`packages/vite/src/node/watch.ts` as of the `main` branch); Vite's production
+`--build --watch` mode uses Rollup/Rolldown's own watcher instead.
+
 ## API / semantics
 
 - `chokidar.watch(paths, options)` returns an `FSWatcher` emitting `add`,

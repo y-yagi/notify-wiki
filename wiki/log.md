@@ -36,6 +36,14 @@
   `--watch` and `--hot` share this exact watcher, differing only in the
   `on_file_update` callback (full process restart vs. in-place module-cache
   swap preserving `globalThis`).
+- **Vite** (user request, no raw file added — GitHub link only): read
+  `vitejs/vite`'s `main` branch (`packages/vite/src/node/server/index.ts`,
+  `watch.ts`) to confirm its dev server uses [[chokidar]] directly (pinned
+  `^3.6.0`), with default ignores for `.git/`, `node_modules/`,
+  `test-results/`, `cacheDir`, and `build.outDir`. Production
+  `--build --watch` uses Rollup/Rolldown's own watcher instead. Added a
+  one-line note to `wiki/concepts/chokidar.md`'s Overview citing
+  https://github.com/vitejs/vite as the consumer; no new source page.
 - Cross-linked the two new pages: `[[bun-watcher]]` added to
   `concepts/inotify.md`, `concepts/kqueue.md`,
   `concepts/readdirectorychangesw.md` (each backend's direct native-API
